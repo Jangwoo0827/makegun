@@ -21,6 +21,7 @@ import pygame  # noqa: E402
 import settings  # noqa: E402
 from entities.pickup import PickupKind  # noqa: E402
 from systems.assets import enemy_sprite_size  # noqa: E402
+from weapons.gun_renderer import GUN_IMAGE_SCALE, RECEIVER_IMAGE_HEIGHT  # noqa: E402
 
 OUT_DIR = os.path.join(settings.ASSETS_DIR, "placeholders")
 IMAGES_DIR = os.path.join(settings.ASSETS_DIR, "images")
@@ -77,6 +78,19 @@ def main() -> None:
     for category, entries in parts.items():
         for pid, d in entries.items():
             add("parts", pid, (96, 48), f"{category}\n{d['name']}", settings.RARITY_COLORS[d["rarity"]])
+
+    # In-game gun pieces (side view, muzzle to the right), authored at 8x slot size.
+    S = GUN_IMAGE_SCALE
+    for category in ("receiver", "barrel", "magazine"):
+        for pid, d in parts[category].items():
+            v = d["visual"]
+            if category == "receiver":
+                size = (int(v["length"] * S), round(v["height"] * RECEIVER_IMAGE_HEIGHT * S))
+            elif category == "barrel":
+                size = (int((v["length"] + 2) * S), int(v["width"] * S))
+            else:
+                size = (int(v["w"] * S), int(v["h"] * S))
+            add("gun", pid, size, d["name"], settings.RARITY_COLORS[d["rarity"]], category != "magazine")
 
     for kind in PickupKind:
         add("pickups", kind.value, (32, 32), kind.value[:4], (200, 200, 200))

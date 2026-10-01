@@ -137,7 +137,7 @@ class ShopState(GameState):
                 preview = dict(s.weapons[self.weapon_index].parts)
                 part = s.library.get(offer.part_id)
                 preview[part.category] = part
-                if not ASSETS.blit_centered(surface, "parts", part.part_id, (rect.centerx, rect.y + 96), (96, 48)):
+                if not ASSETS.blit_part_icon(surface, part.part_id, (rect.centerx, rect.y + 96)):
                     draw_gun(surface, preview, (rect.x + 70, rect.y + 88), 0.0, 1.6)
                 desc_y = rect.y + 136
             else:

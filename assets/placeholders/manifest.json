@@ -289,6 +289,116 @@
    48
   ]
  },
+ "gun": {
+  "pistol_receiver": [
+   240,
+   213
+  ],
+  "smg_receiver": [
+   288,
+   228
+  ],
+  "rifle_receiver": [
+   368,
+   213
+  ],
+  "shotgun_receiver": [
+   336,
+   274
+  ],
+  "heavy_receiver": [
+   416,
+   334
+  ],
+  "rail_receiver": [
+   400,
+   243
+  ],
+  "carbine_receiver": [
+   320,
+   198
+  ],
+  "blaster_receiver": [
+   272,
+   243
+  ],
+  "sniper_receiver": [
+   448,
+   198
+  ],
+  "minigun_receiver": [
+   464,
+   365
+  ],
+  "standard_barrel": [
+   192,
+   48
+  ],
+  "short_barrel": [
+   112,
+   56
+  ],
+  "long_barrel": [
+   336,
+   40
+  ],
+  "heavy_barrel": [
+   224,
+   88
+  ],
+  "split_barrel": [
+   208,
+   40
+  ],
+  "precision_barrel": [
+   288,
+   48
+  ],
+  "compensator_barrel": [
+   176,
+   64
+  ],
+  "sawed_off_barrel": [
+   80,
+   72
+  ],
+  "sniper_barrel": [
+   432,
+   40
+  ],
+  "triple_barrel": [
+   192,
+   40
+  ],
+  "small_magazine": [
+   64,
+   96
+  ],
+  "extended_magazine": [
+   64,
+   160
+  ],
+  "quick_magazine": [
+   80,
+   80
+  ],
+  "drum_magazine": [
+   144,
+   144
+  ],
+  "belt_feed": [
+   160,
+   128
+  ],
+  "twin_magazine": [
+   112,
+   144
+  ],
+  "hyper_magazine": [
+   144,
+   112
+  ]
+ },
  "pickups": {
   "money": [
    32,

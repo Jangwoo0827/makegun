@@ -232,7 +232,7 @@ class WeaponEditorState(GameState):
         if info is not None:
             color = settings.RARITY_COLORS[info.rarity.value]
             draw_text(surface, f"{info.name}  [{info.rarity.value}]", (st.x + 14, st.y + 240), 15, color, True)
-            ASSETS.blit_centered(surface, "parts", info.part_id, (st.right - 60, st.y + 226), (96, 48))
+            ASSETS.blit_part_icon(surface, info.part_id, (st.right - 60, st.y + 226))
             desc = info.description if info.part_id in self.session.owned_parts else \
                 "Locked - find it as a drop or buy it in the shop."
             for j, line in enumerate(wrap_text(desc, 13, st.w - 28)[:2]):

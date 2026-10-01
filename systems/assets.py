@@ -21,6 +21,7 @@ CATEGORIES: dict[str, tuple[int, int]] = {
     "enemies": (48, 48),
     "player": (40, 40),
     "parts": (96, 48),
+    "gun": (64, 32),
     "pickups": (32, 32),
     "tiles": (80, 80),
 }
@@ -74,6 +75,18 @@ class AssetManager:
             img = pygame.transform.rotate(img, angle_deg)
         surface.blit(img, img.get_rect(center=(int(center[0]), int(center[1]))))
         return True
+
+    def blit_part_icon(self, surface: pygame.Surface, part_id: str, center: tuple[float, float],
+                       box: tuple[int, int] = (96, 48)) -> bool:
+        """Part icon for menus: parts/<id>.png, else the in-game gun/<id>.png fitted into `box`."""
+        if self.blit_centered(surface, "parts", part_id, center, box):
+            return True
+        raw = self._load("gun", part_id)
+        if raw is None:
+            return False
+        rw, rh = raw.get_size()
+        k = min(box[0] / rw, box[1] / rh)
+        return self.blit_centered(surface, "gun", part_id, center, (int(rw * k), int(rh * k)))
 
     def clear_cache(self) -> None:
         self._raw.clear()

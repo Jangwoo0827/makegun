@@ -9,7 +9,8 @@ If `assets/images/<category>/<name>.png` exists, the game draws it instead of th
 |---|---|---|---|
 | `enemies/` | enemy id from `data/enemies.json` (`normal`, `boss`, `broodmother`, ...) | ~2.4x radius | **face right**, the game rotates it |
 | `player/` | `player` | 40x40 | **face right** |
-| `parts/` | part id from `data/weapons.json` (`smg_receiver`, ...) | 96x48 | icon in editor and shop |
+| `gun/` | receiver / barrel / magazine part id | 8x its slot (see `placeholders/manifest.json`) | **in-game gun piece**, side view, muzzle to the right. Receiver art = body on top + grip at lower-left, rest transparent |
+| `parts/` | any part id from `data/weapons.json` (`smg_receiver`, ...) | 96x48 | icon in editor and shop (falls back to the `gun/` image) |
 | `pickups/` | `money`, `health`, `ammo`, `buff`, `part` | 32x32 | |
 | `tiles/` | `floor` (80x80, tiled), `wall` (40x40, tiled) | | |
 
