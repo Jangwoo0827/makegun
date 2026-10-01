@@ -144,9 +144,9 @@ def draw_gun(surface: pygame.Surface, parts: dict[PartCategory, WeaponPart], ori
         poly(_rect(g.rx0, -h2, g.rx1, h2), g.receiver_color)
     if receiver_img:  # magazine plugs in over the receiver art
         draw_magazine()
-    # Modifier accent stripe + ammo indicator
-    poly(_rect(g.rx0 + 3, -1.5, g.rx1 - 3, 1.5), g.mod_color, edge=False)
-    poly(_rect(g.rx1 - 9, -h2 + 2, g.rx1 - 4, -h2 + 6), g.ammo_color, edge=False)
+    if not receiver_img:  # shape-drawn guns show ammo/modifier as color accents
+        poly(_rect(g.rx0 + 3, -1.5, g.rx1 - 3, 1.5), g.mod_color, edge=False)
+        poly(_rect(g.rx1 - 9, -h2 + 2, g.rx1 - 4, -h2 + 6), g.ammo_color, edge=False)
 
     return _transform([(g.muzzle_x, 0.0)], origin, angle, scale, flip)[0]
 
