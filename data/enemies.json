@@ -1,0 +1,32 @@
+{
+  "normal": {
+    "name": "Grunt", "behavior": "melee", "hp": 30, "speed": 115, "damage": 10,
+    "radius": 15, "color": [220, 70, 70], "reward": 10, "armor": 0.0,
+    "attack_range": 0, "attack_cooldown": 0.8, "projectile_speed": 0, "shape": "circle"
+  },
+  "fast": {
+    "name": "Runner", "behavior": "melee", "hp": 16, "speed": 215, "damage": 7,
+    "radius": 11, "color": [255, 130, 80], "reward": 15, "armor": 0.0,
+    "attack_range": 0, "attack_cooldown": 0.6, "projectile_speed": 0, "shape": "triangle"
+  },
+  "tank": {
+    "name": "Brute", "behavior": "melee", "hp": 160, "speed": 65, "damage": 22,
+    "radius": 26, "color": [170, 40, 60], "reward": 30, "armor": 0.3,
+    "attack_range": 0, "attack_cooldown": 1.1, "projectile_speed": 0, "shape": "square"
+  },
+  "shooter": {
+    "name": "Gunner", "behavior": "ranged", "hp": 26, "speed": 95, "damage": 8,
+    "radius": 14, "color": [230, 90, 160], "reward": 20, "armor": 0.0,
+    "attack_range": 380, "attack_cooldown": 1.6, "projectile_speed": 330, "shape": "diamond"
+  },
+  "elite": {
+    "name": "Elite Reaver", "behavior": "elite", "hp": 380, "speed": 120, "damage": 20,
+    "radius": 22, "color": [255, 60, 200], "reward": 100, "armor": 0.15,
+    "attack_range": 420, "attack_cooldown": 3.2, "projectile_speed": 300, "shape": "hexagon"
+  },
+  "boss": {
+    "name": "THE GUNNER", "behavior": "boss", "hp": 4200, "speed": 85, "damage": 14,
+    "radius": 46, "color": [255, 40, 40], "reward": 500, "armor": 0.1,
+    "attack_range": 520, "attack_cooldown": 1.2, "projectile_speed": 300, "shape": "boss"
+  }
+}

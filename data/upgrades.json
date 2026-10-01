@@ -1,0 +1,19 @@
+{
+  "rapid_fire":   {"name": "RAPID FIRE",   "rarity": "COMMON",    "description": "+15% Fire Rate",           "effects": {"fire_rate_multiplier": 0.15}},
+  "big_bullet":   {"name": "BIG BULLET",   "rarity": "COMMON",    "description": "+20% Damage",              "effects": {"damage_multiplier": 0.20}},
+  "extra_mag":    {"name": "EXTRA MAG",    "rarity": "COMMON",    "description": "+30% Magazine Size",       "effects": {"magazine_multiplier": 0.30}},
+  "vitality":     {"name": "VITALITY",     "rarity": "COMMON",    "description": "+25 Max HP (and heal it)", "effects": {"max_hp": 25}},
+  "sprinter":     {"name": "SPRINTER",     "rarity": "COMMON",    "description": "+10% Move Speed",          "effects": {"move_speed_multiplier": 0.10}},
+  "fast_hands":   {"name": "FAST HANDS",   "rarity": "UNCOMMON",  "description": "-20% Reload Time",         "effects": {"reload_multiplier": -0.20}},
+  "keen_eye":     {"name": "KEEN EYE",     "rarity": "UNCOMMON",  "description": "+8% Crit Chance",          "effects": {"crit_chance": 0.08}},
+  "brutal":       {"name": "BRUTAL",       "rarity": "UNCOMMON",  "description": "+40% Crit Damage",         "effects": {"crit_damage": 0.40}},
+  "velocity":     {"name": "VELOCITY",     "rarity": "UNCOMMON",  "description": "+25% Bullet Speed & Range", "effects": {"bullet_speed_multiplier": 0.25}},
+  "regenerator":  {"name": "REGENERATOR",  "rarity": "UNCOMMON",  "description": "Regenerate 1 HP / sec",    "effects": {"regen": 1.0}},
+  "penetrator":   {"name": "PENETRATOR",   "rarity": "RARE",      "description": "+1 Pierce",                "effects": {"pierce_bonus": 1}},
+  "blood_pact":   {"name": "BLOOD PACT",   "rarity": "RARE",      "description": "+3% Lifesteal",            "effects": {"lifesteal": 0.03}},
+  "fortune":      {"name": "FORTUNE",      "rarity": "RARE",      "description": "+40% Luck",                "effects": {"luck": 0.40}},
+  "double_shot":  {"name": "DOUBLE SHOT",  "rarity": "EPIC",      "description": "+1 Bullet per shot",       "effects": {"bullet_count_bonus": 1}},
+  "overclock":    {"name": "OVERCLOCK",    "rarity": "EPIC",      "description": "+30% Fire Rate, +10% Dmg", "effects": {"fire_rate_multiplier": 0.30, "damage_multiplier": 0.10}},
+  "glass_cannon": {"name": "GLASS CANNON", "rarity": "LEGENDARY", "description": "+60% Damage, -30 Max HP",  "effects": {"damage_multiplier": 0.60, "max_hp": -30}},
+  "bullet_storm": {"name": "BULLET STORM", "rarity": "LEGENDARY", "description": "+2 Bullets, +1 Pierce",    "effects": {"bullet_count_bonus": 2, "pierce_bonus": 1}}
+}
