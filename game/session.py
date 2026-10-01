@@ -31,6 +31,8 @@ class RunSession:
         self.money_earned: int = 0
         self.pending_upgrades: list[Upgrade] = []
         self.last_wave_reward: int = 0
+        #: number of waves already completed when the run was (re)started from a save
+        self.resume_wave: int = 0
 
     @property
     def weapons(self) -> list[Weapon]:

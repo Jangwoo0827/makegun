@@ -20,6 +20,8 @@ EXPLOSION_DAMAGE: float = 0.7
 SPLIT_DAMAGE: float = 0.4
 BURN_DURATION: float = 3.0
 SEEK_RANGE: float = 400.0
+SLOW_DURATION: float = 2.0
+HOMING_RANGE: float = 450.0
 
 
 class CombatSystem:
@@ -50,6 +52,7 @@ class CombatSystem:
                 crit_chance=stats.crit_chance, crit_damage=stats.crit_damage,
                 knockback=stats.knockback, burn=stats.burn, split=stats.split,
                 ricochet=stats.ricochet, chain=stats.chain, lifesteal=stats.lifesteal,
+                slow=stats.slow, homing=stats.homing,
             ))
             if sweep_from is not None:
                 self.world.bullets[-1].prev_pos.update(sweep_from)
@@ -57,6 +60,23 @@ class CombatSystem:
         self.world.effects.burst(origin, (255, 220, 140), 4, 220, 0.12, 2.5, direction, 0.4)
         self.shake(min(8.0, 1.0 + stats.damage * shot.damage_mult * count / 40.0))
         self.sound.play("shoot", 40)
+
+    def update_homing(self, dt: float) -> None:
+        """Rotate homing bullets toward the nearest enemy they haven't hit yet."""
+        for b in self.world.bullets:
+            if b.homing <= 0 or not b.alive:
+                continue
+            target = self._nearest_enemy(b.pos, HOMING_RANGE, b.hit_ids)
+            if target is None:
+                continue
+            speed = b.velocity.length()
+            desired = target.pos - b.pos
+            if desired.length_squared() < 1 or speed <= 0:
+                continue
+            desired.scale_to_length(speed)
+            b.velocity += (desired - b.velocity) * min(1.0, b.homing * dt)
+            if b.velocity.length_squared() > 0:
+                b.velocity.scale_to_length(speed)
 
     # ------------------------------------------------------------------ hits
     def deal_damage(self, enemy: Enemy, amount: float, crit: bool, ignore_armor: bool,
@@ -76,6 +96,8 @@ class CombatSystem:
         self.world.effects.burst(b.pos, enemy.data.color, 5, 160, 0.25, 2.5, b.velocity, 0.7)
         self.sound.play("hit", 45)
 
+        if b.slow > 0:
+            enemy.apply_slow(b.slow, SLOW_DURATION)
         if b.burn > 0:
             enemy.apply_burn(dmg * b.burn, BURN_DURATION)
         if b.chain > 0:

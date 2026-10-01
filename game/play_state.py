@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from entities.enemy import Enemy
+import settings
+from entities.enemy import Enemy, EnemyActions
 from entities.pickup import Pickup, PickupKind
 from entities.player import BUFF_DEFS
 from game.camera import Camera
 from game.state import GameState, StateID
 from game.world import World
-from systems.collision import CollisionSystem
+from systems.collision import CollisionSystem, line_of_sight
 from systems.combat import CombatSystem
 from systems.loot_manager import LootManager
 from systems.spawn_manager import SpawnManager
@@ -29,7 +30,7 @@ DEATH_DELAY: float = 1.2
 class PlayState(GameState):
     state_id = StateID.GAME
 
-    def __init__(self, game: "Game") -> None:
+    def __init__(self, game: "Game", start_wave: bool = True) -> None:
         super().__init__(game)
         session = game.require_session()
         self.session = session
@@ -47,8 +48,10 @@ class PlayState(GameState):
         self.loot = LootManager(game.library)
         self.hud = HUD()
         self.death_timer: float = 0.0
-        self.awaiting_next_wave: bool = False
-        self._start_wave()
+        self.waves.wave = session.resume_wave
+        self.awaiting_next_wave: bool = not start_wave
+        if start_wave:
+            self._start_wave()
 
     # ------------------------------------------------------------ lifecycle
     def on_enter(self) -> None:
@@ -70,6 +73,7 @@ class PlayState(GameState):
         self.world.enemy_bullets.clear()
         self.waves.start_next_wave()
         self.session.wave_reached = self.waves.wave
+        self.game.save_run()  # autosave at wave start
         self.game.sound.play("boss" if self.waves.is_boss_wave else "wave")
 
     # --------------------------------------------------------------- events
@@ -122,24 +126,23 @@ class PlayState(GameState):
         # Entities
         for b in world.bullets:
             b.update(dt)
+        self.combat.update_homing(dt)
         for b in world.enemy_bullets:
             b.update(dt)
-        for e in world.enemies:
-            actions = e.update(dt, player.pos)
-            world.enemy_bullets.extend(actions.bullets)
-            for etype in actions.summons:
-                self._add_enemy(self.spawner.spawn_now(etype, player.pos, near=e.pos))
-                self.waves.register_extra()
+        for e in list(world.enemies):
+            e.has_los = line_of_sight(e.pos, player.pos, world.inner_walls)
+            self._apply_enemy_actions(e, e.update(dt, player.pos))
         for p in world.pickups:
-            p.update(dt, player.pos, 110.0)
+            p.update(dt, player.pos, settings.PLAYER_PICKUP_RADIUS * self.session.stats.pickup_radius_multiplier)
 
         self.collisions.update(player, world.enemies, world.bullets, world.enemy_bullets,
                                world.pickups, world.walls)
 
         # Deaths & cleanup
-        for e in world.enemies:
+        for e in list(world.enemies):
             if not e.alive:
                 self._on_enemy_killed(e)
+                self._apply_enemy_actions(e, e.on_death())
         world.enemies = [e for e in world.enemies if e.alive]
         world.bullets = [b for b in world.bullets if b.alive]
         world.enemy_bullets = [b for b in world.enemy_bullets if b.alive]
@@ -152,6 +155,24 @@ class PlayState(GameState):
 
         if player.alive and self.waves.update(dt, len(world.enemies)):
             self._on_wave_cleared()
+
+    def _apply_enemy_actions(self, enemy: Enemy, actions: EnemyActions) -> None:
+        world, player = self.world, self.session.player
+        world.enemy_bullets.extend(actions.bullets)
+        for etype in actions.summons:
+            self._add_enemy(self.spawner.spawn_now(etype, player.pos, near=enemy.pos))
+            self.waves.register_extra()
+        for pos, radius, damage in actions.explosions:
+            world.effects.explosion(pos, radius)
+            self.camera.shake(10)
+            self.game.sound.play("explosion", 60)
+            if (player.pos - pos).length() <= radius + player.radius:
+                self._on_player_hit(damage, pos)
+        for pos, radius, fraction in actions.heals:
+            for other in world.enemies:
+                if other.alive and (other.pos - pos).length() <= radius:
+                    other.hp = min(other.max_hp, other.hp + other.max_hp * fraction)
+                    world.effects.burst(other.pos, (120, 255, 140), 4, 80, 0.3, 2)
 
     def _add_enemy(self, enemy: Enemy) -> None:
         self.world.enemies.append(enemy)
@@ -168,6 +189,8 @@ class PlayState(GameState):
                                  220 if not enemy.is_boss else 420, 0.5, 4)
         self.camera.shake(20 if enemy.is_boss else 3)
         self.game.sound.play("enemy_die", 40)
+        if s.stats.heal_on_kill > 0:
+            s.player.heal(s.stats.heal_on_kill)
         luck = s.player.weapon.stats.luck
         self.world.pickups.extend(self.loot.roll_drops(enemy, luck, s.owned_parts, self.waves.wave))
 
@@ -177,11 +200,14 @@ class PlayState(GameState):
             self._on_pickup(p, quiet=True)
         self.world.pickups.clear()
         self.world.enemy_bullets.clear()
+        if s.stats.wave_heal > 0:
+            s.player.heal(s.player.max_hp * s.stats.wave_heal)
         reward = self.waves.clear_reward()
         s.earn(reward)
         s.last_wave_reward = reward
         s.pending_upgrades = s.upgrade_manager.roll_choices(self.waves.wave, 3, s.stats.luck)
         self.awaiting_next_wave = True
+        self.game.save_run()
         self.game.sound.play("wave")
         self.game.push(StateID.WAVE_CLEAR)
 
@@ -199,9 +225,10 @@ class PlayState(GameState):
         fx = self.world.effects
         pos = pickup.pos - pygame.Vector2(0, 18)
         if pickup.kind == PickupKind.MONEY:
-            s.earn(int(pickup.value))
+            amount = int(round(pickup.value * s.stats.money_multiplier))
+            s.earn(amount)
             if not quiet:
-                fx.float_text(pos, f"+${int(pickup.value)}", (255, 214, 90), 14)
+                fx.float_text(pos, f"+${amount}", (255, 214, 90), 14)
         elif pickup.kind == PickupKind.HEALTH:
             s.player.heal(pickup.value)
             fx.float_text(pos, f"+{int(pickup.value)} HP", (90, 240, 120))

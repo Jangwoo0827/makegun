@@ -59,30 +59,68 @@ class MainMenuState(MenuState):
 
     def __init__(self, game: "Game") -> None:
         super().__init__(game)
-        x, y = W // 2 - 130, 330
-        items = [("PLAY", game.start_new_run), ("LOADOUT", lambda: game.push(StateID.LOADOUT)),
-                 ("SETTINGS", lambda: game.push(StateID.SETTINGS)), ("QUIT", game.quit)]
-        for i, (label, cb) in enumerate(items):
-            self.buttons.add(Button((x, y + i * 70, 260, 54), label, cb, font_size=24))
+        self.confirm_new: bool = False
+        self._build()
+
+    def _build(self) -> None:
+        game = self.game
+        self.buttons.clear()
+        save = game.saves.peek()
+        x, y = W // 2 - 140, 300
+        items: list[tuple[str, object, str]] = []
+        if save is not None:
+            wave = int(save.get("resume_wave", 0))
+            where = f"Wave {wave + 1}" if save.get("phase") == "wave" else f"After wave {wave}"
+            items.append(("CONTINUE", self._continue, f"{where}  -  ${save.get('money', 0)}"))
+            new_label = "CLICK AGAIN TO OVERWRITE" if self.confirm_new else "NEW RUN"
+            items.append((new_label, self._new_run, "replaces your save" if self.confirm_new else ""))
+        else:
+            items.append(("PLAY", self._new_run, ""))
+        items += [("LOADOUT", lambda: game.push(StateID.LOADOUT), ""),
+                  ("SETTINGS", lambda: game.push(StateID.SETTINGS), ""), ("QUIT", game.quit, "")]
+        for i, (label, cb, sub) in enumerate(items):
+            self.buttons.add(Button((x, y + i * 64, 280, 54), label, cb, font_size=20 if sub else 24,  # type: ignore[arg-type]
+                                    subtext=sub, selected=(label == "CONTINUE")))
+
+    def on_enter(self) -> None:
+        pygame.mouse.set_visible(True)
+        self.confirm_new = False
+        self._build()
+
+    def _continue(self) -> None:
+        if not self.game.continue_run():
+            self.game.saves.delete()  # corrupt/outdated save
+            self._build()
+
+    def _new_run(self) -> None:
+        if self.game.saves.has_save() and not self.confirm_new:
+            self.confirm_new = True
+            self._build()
+            return
+        self.game.saves.delete()
+        self.game.start_new_run()
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            self.game.start_new_run()
+            if self.game.saves.has_save():
+                self._continue()
+            else:
+                self._new_run()
             return
         super().handle_event(event)
 
     def draw(self, surface: pygame.Surface) -> None:
         draw_backdrop(surface, self.time)
         bob = math.sin(self.time * 2) * 6
-        draw_text(surface, "GUN DESIGNER", (W // 2, 130 + bob), 76, settings.UI_ACCENT, True, "center")
-        draw_text(surface, "build the gun  -  survive the waves", (W // 2, 195), 20, settings.UI_TEXT_DIM,
+        draw_text(surface, "GUN DESIGNER", (W // 2, 100 + bob), 76, settings.UI_ACCENT, True, "center")
+        draw_text(surface, "build the gun  -  survive the waves", (W // 2, 160), 20, settings.UI_TEXT_DIM,
                   anchor="center")
         preset = self.game.starter_preset()
         lib = self.game.library
         parts = {c: lib.get(pid) for c, pid in preset.part_ids.items()}
-        draw_gun(surface, parts, (W // 2 - 60, 262), -0.12 + math.sin(self.time) * 0.05, 3.0)
+        draw_gun(surface, parts, (W // 2 - 45, 222), -0.12 + math.sin(self.time) * 0.05, 2.2)
         self.buttons.draw(surface)
-        draw_text(surface, f"Starter: {preset.name}", (W // 2, 620), 16, settings.UI_TEXT_DIM, anchor="center")
+        draw_text(surface, f"Starter: {preset.name}", (W // 2, H - 58), 16, settings.UI_TEXT_DIM, anchor="center")
         draw_text(surface, "WASD move  |  Mouse aim  |  LMB fire  |  R reload  |  1/2/3 switch  |  ESC pause",
                   (W // 2, H - 30), 15, settings.UI_TEXT_DIM, anchor="center")
 
@@ -164,7 +202,7 @@ class PauseState(MenuState):
     def __init__(self, game: "Game") -> None:
         super().__init__(game)
         items = [("RESUME", game.pop), ("SETTINGS", lambda: game.push(StateID.SETTINGS)),
-                 ("QUIT TO MENU", game.end_run)]
+                 ("SAVE & QUIT", game.save_and_quit_to_menu)]
         for i, (label, cb) in enumerate(items):
             self.buttons.add(Button((W // 2 - 130, 300 + i * 70, 260, 54), label, cb))
 
@@ -181,6 +219,8 @@ class PauseState(MenuState):
         dim(surface)
         draw_text(surface, "PAUSED", (W // 2, 210), 56, settings.UI_ACCENT, True, "center")
         self.buttons.draw(surface)
+        draw_text(surface, "Save & Quit keeps your money, parts and upgrades. The current wave restarts on CONTINUE.",
+                  (W // 2, 530), 15, settings.UI_TEXT_DIM, anchor="center")
 
 
 class IntermissionState(MenuState):
@@ -196,6 +236,7 @@ class IntermissionState(MenuState):
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
+        self.game.save_run()  # autosave after upgrades / shop / editor changes
 
     def _continue(self) -> None:
         self.game.pop_to(StateID.GAME)
@@ -227,6 +268,7 @@ class GameOverState(MenuState):
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
+        self.game.saves.delete()  # roguelite: death ends the run
 
     def draw(self, surface: pygame.Surface) -> None:
         dim(surface, 200)

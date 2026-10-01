@@ -7,6 +7,7 @@ import pygame
 
 import settings
 from entities.player_stats import PlayerStats
+from systems.assets import ASSETS
 from weapons.gun_renderer import draw_gun, muzzle_distance
 from weapons.weapon import Weapon
 
@@ -87,8 +88,8 @@ class Player:
     def take_damage(self, amount: float) -> bool:
         if self.invuln > 0 or not self.alive:
             return False
-        self.hp -= amount
-        self.invuln = settings.PLAYER_INVULN_TIME
+        self.hp -= amount * (1.0 - self.stats.damage_reduction)
+        self.invuln = settings.PLAYER_INVULN_TIME + self.stats.invuln_bonus
         self.hurt_flash = 0.2
         if self.hp <= 0:
             self.hp = 0
@@ -133,9 +134,13 @@ class Player:
         if self.invuln > 0 and int(self.invuln * 20) % 2 == 0:
             return
         pygame.draw.circle(surface, (0, 0, 0), p + pygame.Vector2(3, 4), self.radius)
-        body = (255, 120, 120) if self.hurt_flash > 0 else settings.PLAYER_COLOR
-        pygame.draw.circle(surface, body, p, self.radius)
-        pygame.draw.circle(surface, settings.PLAYER_OUTLINE, p, self.radius, 2)
+        size = int(self.radius * 2.5)
+        if not ASSETS.blit_centered(surface, "player", "player", p, (size, size), -math.degrees(self.angle)):
+            body = (255, 120, 120) if self.hurt_flash > 0 else settings.PLAYER_COLOR
+            pygame.draw.circle(surface, body, p, self.radius)
+            pygame.draw.circle(surface, settings.PLAYER_OUTLINE, p, self.radius, 2)
+        elif self.hurt_flash > 0:
+            pygame.draw.circle(surface, (255, 90, 90), p, self.radius, 3)
         gun_origin = p + self.aim_dir * (self.radius * 0.6)
         muzzle = draw_gun(surface, self.weapon.parts, gun_origin, self.angle, 1.0)
         if self.muzzle_flash > 0:

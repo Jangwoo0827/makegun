@@ -6,6 +6,7 @@ from enum import Enum
 
 import pygame
 
+from systems.assets import ASSETS
 from ui.fonts import get_font
 
 PICKUP_LIFETIME: float = 20.0
@@ -60,6 +61,8 @@ class Pickup:
         p = self.pos - offset
         p.y += math.sin(self.age * 5) * 2
         color = PICKUP_COLORS[self.kind]
+        if ASSETS.blit_centered(surface, "pickups", self.kind.value, p, (32, 32)):
+            return
         if self.kind == PickupKind.MONEY:
             pygame.draw.circle(surface, color, p, self.radius)
             pygame.draw.circle(surface, (150, 110, 20), p, self.radius, 2)

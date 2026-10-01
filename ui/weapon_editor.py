@@ -10,16 +10,19 @@ from game.state import GameState, StateID
 from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
 from ui.menus import draw_backdrop
+from systems.assets import ASSETS
+from ui.scroll_row import ScrollRow
 from weapons.gun_renderer import draw_gun
 from weapons.weapon import Weapon, WeaponStats
 from weapons.weapon_builder import BLUEPRINTS, WeaponPreset
-from weapons.weapon_parts import PART_ORDER, WeaponPart
+from weapons.weapon_parts import PART_ORDER, PartCategory, WeaponPart
 
 if TYPE_CHECKING:
     from game.game import Game
 
 W, H = settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT
 PARTS_X, PARTS_Y, ROW_H = 520, 64, 90
+PART_BTN_W: int = 128
 
 # (label, getter, higher_is_better, format)
 COMPARE_ROWS: tuple[tuple[str, str, bool, str], ...] = (
@@ -52,8 +55,14 @@ class WeaponEditorState(GameState):
         self.message_time: float = 0.0
         self.buttons = ButtonGroup()
         self.part_buttons: list[tuple[Button, WeaponPart]] = []
+        self.rows: dict[PartCategory, ScrollRow] = {
+            c: ScrollRow(pygame.Rect(PARTS_X, PARTS_Y + i * ROW_H + 26, W - PARTS_X - 20, 52), PART_BTN_W)
+            for i, c in enumerate(PART_ORDER)}
         self.time: float = 0.0
         self._build()
+        for category, row in self.rows.items():  # start each row scrolled to the equipped part
+            ids = [p.part_id for p in self.session.library.by_category[category]]
+            row.ensure_visible(ids.index(self.draft.part(category).part_id), instant=True)
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
@@ -73,20 +82,19 @@ class WeaponEditorState(GameState):
         for i in range(len(s.weapons)):
             self.buttons.add(Button((20 + i * 100, 64, 92, 34), f"SLOT {i + 1}", lambda i=i: self._select_slot(i),
                                     font_size=15, selected=i == self.slot, hotkey=pygame.K_1 + i))
-        # Parts
-        for row, category in enumerate(PART_ORDER):
-            parts = s.library.by_category[category]
-            bw = min(118, (W - PARTS_X - 20 - (len(parts) - 1) * 6) // len(parts))
-            for col, part in enumerate(parts):
+        # Parts: one horizontally scrolling row per category
+        for category in PART_ORDER:
+            row_buttons: list[Button] = []
+            for part in s.library.by_category[category]:
                 owned = part.part_id in s.owned_parts
-                rect = (PARTS_X + col * (bw + 6), PARTS_Y + row * ROW_H + 26, bw, 52)
                 name = part.name.replace(" Receiver", "").replace(" Barrel", "").replace(" Magazine", "")
-                btn = Button(rect, name if owned else "LOCKED", lambda p=part: self._equip(p), font_size=14,
-                             accent=settings.RARITY_COLORS[part.rarity.value], enabled=owned,
+                btn = Button((0, 0, PART_BTN_W, 52), name if owned else "LOCKED", lambda p=part: self._equip(p),
+                             font_size=14, accent=settings.RARITY_COLORS[part.rarity.value], enabled=owned,
                              selected=self.draft.part(category).part_id == part.part_id,
                              subtext=part.rarity.value.title() if owned else name)
-                self.buttons.add(btn)
+                row_buttons.append(btn)
                 self.part_buttons.append((btn, part))
+            self.rows[category].set_items(row_buttons)
         # Blueprints
         for i, bp in enumerate(BLUEPRINTS):
             ok = all(pid in s.owned_parts for pid in bp.part_ids.values())
@@ -150,14 +158,23 @@ class WeaponEditorState(GameState):
     # ---------------------------------------------------------------- events
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.MOUSEMOTION:
-            self.hover_part = None
-            for btn, part in self.part_buttons:
-                if btn.rect.collidepoint(event.pos):
-                    self.hover_part = part
+            self._update_hover(event.pos)
+        for row in list(self.rows.values()):
+            if row.handle_event(event):
+                return
         self.buttons.handle_event(event)
+
+    def _update_hover(self, pos: tuple[int, int]) -> None:
+        self.hover_part = None
+        for category, row in self.rows.items():
+            idx = row.hovered_index(pos)
+            if idx is not None:
+                self.hover_part = self.session.library.by_category[category][idx]
 
     def update(self, dt: float) -> None:
         self.time += dt
+        for row in self.rows.values():
+            row.update(dt)
         self.message_time = max(0.0, self.message_time - dt)
 
     # ------------------------------------------------------------------ draw
@@ -215,6 +232,7 @@ class WeaponEditorState(GameState):
         if info is not None:
             color = settings.RARITY_COLORS[info.rarity.value]
             draw_text(surface, f"{info.name}  [{info.rarity.value}]", (st.x + 14, st.y + 240), 15, color, True)
+            ASSETS.blit_centered(surface, "parts", info.part_id, (st.right - 60, st.y + 226), (96, 48))
             desc = info.description if info.part_id in self.session.owned_parts else \
                 "Locked - find it as a drop or buy it in the shop."
             for j, line in enumerate(wrap_text(desc, 13, st.w - 28)[:2]):
@@ -222,10 +240,14 @@ class WeaponEditorState(GameState):
 
         # Part rows
         for row, category in enumerate(PART_ORDER):
-            draw_text(surface, category.label.upper(), (PARTS_X, PARTS_Y + row * ROW_H + 6), 16,
-                      settings.UI_TEXT_DIM, True)
+            owned = len(self.session.owned_in(category))
+            total = len(self.session.library.by_category[category])
+            draw_text(surface, f"{category.label.upper()}  {owned}/{total}", (PARTS_X, PARTS_Y + row * ROW_H + 6),
+                      16, settings.UI_TEXT_DIM, True)
         draw_text(surface, "BLUEPRINTS", (20, 352), 12, settings.UI_TEXT_DIM, True)
         self.buttons.draw(surface)
+        for row in self.rows.values():
+            row.draw(surface)
         if self.message_time > 0:
             draw_text(surface, self.message, (PARTS_X, H - 40), 16, settings.UI_GOOD, True)
         elif self.dirty:

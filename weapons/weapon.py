@@ -13,7 +13,7 @@ STAT_DEFAULTS: dict[str, float] = {
     "bullet_speed": 800.0, "bullet_count": 1.0, "spread": 4.0, "range": 600.0,
     "crit_chance": 0.0, "crit_damage": 0.0, "pierce": 0.0, "explosion_radius": 0.0,
     "knockback": 60.0, "lifesteal": 0.0, "chain": 0.0, "luck": 0.0, "split": 0.0,
-    "ricochet": 0.0, "burn": 0.0, "move_speed_mult": 1.0,
+    "ricochet": 0.0, "burn": 0.0, "move_speed_mult": 1.0, "slow": 0.0, "homing": 0.0,
 }
 
 BURST_INTERVAL: float = 0.07
@@ -44,6 +44,8 @@ class WeaponStats:
     ricochet: int
     burn: float
     move_speed_mult: float
+    slow: float
+    homing: float
     fire_mode: str
     burst_count: int
     charge_time: float
@@ -125,6 +127,15 @@ class Weapon:
             values["pierce"] += player.pierce_bonus
             values["lifesteal"] += player.lifesteal
             values["luck"] += player.luck
+            values["spread"] *= player.spread_multiplier
+            values["knockback"] *= player.knockback_multiplier
+            values["burn"] += player.burn_bonus
+            values["chain"] += player.chain_bonus
+            values["ricochet"] += player.ricochet_bonus
+            values["homing"] += player.homing_bonus
+            values["slow"] += player.slow_bonus
+            if values["explosion_radius"] > 0:
+                values["explosion_radius"] += player.explosion_bonus
             crit_base = player.crit_chance
             crit_mult_base = player.crit_damage
         else:
@@ -152,6 +163,8 @@ class Weapon:
             ricochet=int(round(values["ricochet"])),
             burn=values["burn"],
             move_speed_mult=max(0.4, values["move_speed_mult"]),
+            slow=min(0.8, values["slow"]),
+            homing=values["homing"],
             fire_mode=str(props["fire_mode"]),
             burst_count=max(1, int(props["burst_count"])),  # type: ignore[arg-type]
             charge_time=float(props["charge_time"]),  # type: ignore[arg-type]

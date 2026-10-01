@@ -11,6 +11,7 @@ import pygame
 
 import settings
 from entities.bullet import Bullet
+from systems.assets import ASSETS, enemy_sprite_size
 
 Color = tuple[int, int, int]
 
@@ -61,6 +62,10 @@ class EnemyActions:
     """Things an enemy wants the world to do this frame."""
     bullets: list[Bullet] = field(default_factory=list)
     summons: list[str] = field(default_factory=list)
+    #: (position, radius, damage) blasts that hurt the player
+    explosions: list[tuple[pygame.Vector2, float, float]] = field(default_factory=list)
+    #: (position, radius, amount) heals applied to nearby enemies
+    heals: list[tuple[pygame.Vector2, float, float]] = field(default_factory=list)
 
 
 _next_id: int = 0
@@ -83,7 +88,10 @@ class Enemy:
         self.radius: float = data.radius
         self.max_hp: float = data.hp * scaling.hp
         self.hp: float = self.max_hp
-        self.speed: float = data.speed * scaling.speed
+        self.base_speed: float = data.speed * scaling.speed
+        self.speed: float = self.base_speed
+        self.slow_time: float = 0.0
+        self.slow_amount: float = 0.0
         self.damage: float = data.damage * scaling.damage
         self.armor: float = data.armor
         self.reward: int = data.reward
@@ -104,6 +112,8 @@ class Enemy:
         self.last_pos: pygame.Vector2 = pygame.Vector2(pos)
         self.stuck_time: float = 0.0
         self.detour_time: float = 0.0
+        #: set by the world each frame; ranged enemies approach when they can't see the player
+        self.has_los: bool = True
 
     @property
     def is_boss(self) -> bool:
@@ -125,16 +135,30 @@ class Enemy:
         self.burn_dps = max(self.burn_dps, dps)
         self.burn_time = duration
 
+    def apply_slow(self, amount: float, duration: float) -> None:
+        resist = 0.4 if self.is_boss else 1.0
+        self.slow_amount = max(self.slow_amount, amount * resist)
+        self.slow_time = duration
+
     def push(self, direction: pygame.Vector2, force: float) -> None:
         resist = 0.15 if self.is_boss else (0.4 if self.enemy_type in ("tank", "elite") else 1.0)
         if direction.length_squared() > 0:
             self.knockback += direction.normalize() * force * resist
+
+    def on_death(self) -> EnemyActions:
+        """Hook for death effects (splitting, exploding...). Default: nothing."""
+        return EnemyActions()
 
     # --------------------------------------------------------------- update
     def update(self, dt: float, player_pos: pygame.Vector2) -> EnemyActions:
         actions = EnemyActions()
         self.flash = max(0.0, self.flash - dt)
         self.contact_timer = max(0.0, self.contact_timer - dt)
+        if self.slow_time > 0:
+            self.slow_time -= dt
+            if self.slow_time <= 0:
+                self.slow_amount = 0.0
+        self.speed = self.base_speed * (1.0 - self.slow_amount)
         if self.burn_time > 0:
             self.burn_time -= dt
             self.take_damage(self.burn_dps * dt, ignore_armor=True)
@@ -147,13 +171,10 @@ class Enemy:
         self.facing = math.atan2(direction.y, direction.x)
         direction = self._steer(dt, direction)
 
-        behavior = self.data.behavior
-        if behavior == "ranged":
-            self._update_ranged(dt, dist, direction, actions)
-        elif behavior == "elite":
-            self._update_elite(dt, dist, direction, actions)
-        elif behavior == "boss":
-            self._update_boss(dt, dist, direction, actions)
+        # Behavior "xyz" maps to method _update_xyz; unknown behaviors walk at the player.
+        handler = getattr(self, f"_update_{self.data.behavior}", None)
+        if handler is not None:
+            handler(dt, dist, direction, actions)
         else:
             self.pos += direction * self.speed * dt
 
@@ -189,7 +210,7 @@ class Enemy:
 
     def _update_ranged(self, dt: float, dist: float, direction: pygame.Vector2, actions: EnemyActions) -> None:
         desired = self.data.attack_range * 0.8
-        if dist > self.data.attack_range:
+        if dist > self.data.attack_range or not self.has_los:
             self.pos += direction * self.speed * dt
         elif dist < desired * 0.6:
             self.pos -= direction * self.speed * dt
@@ -197,7 +218,7 @@ class Enemy:
             perp = pygame.Vector2(-direction.y, direction.x) * self.strafe_dir
             self.pos += perp * self.speed * 0.5 * dt
         self.attack_timer -= dt
-        if self.attack_timer <= 0 and dist <= self.data.attack_range * 1.1:
+        if self.attack_timer <= 0 and dist <= self.data.attack_range * 1.1 and self.has_los:
             self.attack_timer = self.data.attack_cooldown
             self._shoot(actions, self.facing)
 
@@ -230,10 +251,34 @@ class Enemy:
         if self.burn_time > 0:
             c = self.data.color
             return (min(255, c[0] + 30), min(255, c[1] + 60), c[2] // 2)
+        if self.slow_time > 0:
+            c = self.data.color
+            return (c[0] // 2 + 60, c[1] // 2 + 90, min(255, c[2] // 2 + 128))
         return self.data.color
+
+    def _draw_sprite(self, surface: pygame.Surface, p: pygame.Vector2) -> bool:
+        """Use assets/images/enemies/<type>.png if it exists (drawn facing right)."""
+        if not ASSETS.has("enemies", self.enemy_type):
+            return False
+        pygame.draw.circle(surface, (0, 0, 0), p + pygame.Vector2(3, 4), self.radius)
+        ASSETS.blit_centered(surface, "enemies", self.enemy_type, p, enemy_sprite_size(self.radius),
+                             -math.degrees(self.facing))
+        if self.flash > 0:
+            pygame.draw.circle(surface, (255, 255, 255), p, self.radius, 3)
+        return True
+
+    def _draw_hp_bar(self, surface: pygame.Surface, p: pygame.Vector2) -> None:
+        if not self.is_boss and self.hp < self.max_hp:
+            r = self.radius
+            w = r * 2
+            pygame.draw.rect(surface, (40, 10, 10), (p.x - w / 2, p.y - r - 9, w, 4))
+            pygame.draw.rect(surface, (255, 70, 70), (p.x - w / 2, p.y - r - 9, w * self.hp / self.max_hp, 4))
 
     def draw(self, surface: pygame.Surface, offset: pygame.Vector2) -> None:
         p = self.pos - offset
+        if self._draw_sprite(surface, p):
+            self._draw_hp_bar(surface, p)
+            return
         r = self.radius
         color = self._body_color()
         edge = tuple(max(0, c - 90) for c in self.data.color)
@@ -267,10 +312,7 @@ class Enemy:
         if self.data.behavior == "melee" and shape == "circle":
             eye = p + pygame.Vector2(math.cos(self.facing), math.sin(self.facing)) * r * 0.5
             pygame.draw.circle(surface, (255, 230, 200), eye, 3)
-        if not self.is_boss and self.hp < self.max_hp:
-            w = r * 2
-            pygame.draw.rect(surface, (40, 10, 10), (p.x - w / 2, p.y - r - 9, w, 4))
-            pygame.draw.rect(surface, (255, 70, 70), (p.x - w / 2, p.y - r - 9, w * self.hp / self.max_hp, 4))
+        self._draw_hp_bar(surface, p)
 
 
 class Boss(Enemy):
@@ -329,6 +371,8 @@ class Boss(Enemy):
 
     def draw(self, surface: pygame.Surface, offset: pygame.Vector2) -> None:
         p = self.pos - offset
+        if self._draw_sprite(surface, p):
+            return
         r = self.radius
         t = pygame.time.get_ticks() / 1000.0
         aura = (255, 60, 60) if self.phase == 1 else (255, 160, 40)
@@ -344,10 +388,3 @@ class Boss(Enemy):
             pygame.draw.line(surface, (60, 60, 70), base, tip, 10)
         pygame.draw.circle(surface, (255, 240, 120) if self.phase == 2 else (40, 0, 0), p, r * 0.35)
 
-
-def create_enemy(enemy_type: str, db: dict[str, EnemyData], pos: pygame.Vector2,
-                 scaling: WaveScaling | None = None) -> Enemy:
-    data = db[enemy_type]
-    if data.behavior == "boss":
-        return Boss(enemy_type, data, pos, scaling)
-    return Enemy(enemy_type, data, pos, scaling)

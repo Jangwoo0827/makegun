@@ -8,6 +8,7 @@ from entities.bullet import Bullet
 from entities.enemy import Enemy
 from entities.pickup import Pickup
 from entities.player import Player
+from systems.assets import ASSETS
 from systems.effects import EffectsManager
 
 
@@ -37,6 +38,7 @@ class World:
         self.enemy_bullets: list[Bullet] = []
         self.pickups: list[Pickup] = []
         self.walls: list[pygame.Rect] = build_arena_walls()
+        self.inner_walls: list[pygame.Rect] = self.walls[4:]  # obstacles only (skip boundary)
         self.effects: EffectsManager = EffectsManager()
         self._floor: pygame.Surface = self._render_floor()
 
@@ -56,14 +58,28 @@ class World:
 
     def _render_floor(self) -> pygame.Surface:
         surf = pygame.Surface((settings.ARENA_WIDTH, settings.ARENA_HEIGHT))
-        surf.fill(settings.BG_COLOR)
         g = settings.GRID_SIZE
-        for x in range(0, settings.ARENA_WIDTH, g):
-            pygame.draw.line(surf, settings.GRID_COLOR, (x, 0), (x, settings.ARENA_HEIGHT))
-        for y in range(0, settings.ARENA_HEIGHT, g):
-            pygame.draw.line(surf, settings.GRID_COLOR, (0, y), (settings.ARENA_WIDTH, y))
+        floor_tile = ASSETS.get("tiles", "floor", (g, g))
+        if floor_tile is not None:
+            for x in range(0, settings.ARENA_WIDTH, g):
+                for y in range(0, settings.ARENA_HEIGHT, g):
+                    surf.blit(floor_tile, (x, y))
+        else:
+            surf.fill(settings.BG_COLOR)
+            for x in range(0, settings.ARENA_WIDTH, g):
+                pygame.draw.line(surf, settings.GRID_COLOR, (x, 0), (x, settings.ARENA_HEIGHT))
+            for y in range(0, settings.ARENA_HEIGHT, g):
+                pygame.draw.line(surf, settings.GRID_COLOR, (0, y), (settings.ARENA_WIDTH, y))
+        wall_tile = ASSETS.get("tiles", "wall", (settings.WALL_THICKNESS, settings.WALL_THICKNESS))
         for wall in self.walls:
-            pygame.draw.rect(surf, settings.WALL_COLOR, wall)
+            if wall_tile is not None:
+                surf.set_clip(wall)
+                for x in range(wall.left, wall.right, wall_tile.get_width()):
+                    for y in range(wall.top, wall.bottom, wall_tile.get_height()):
+                        surf.blit(wall_tile, (x, y))
+                surf.set_clip(None)
+            else:
+                pygame.draw.rect(surf, settings.WALL_COLOR, wall)
             pygame.draw.rect(surf, settings.WALL_EDGE_COLOR, wall, 3)
         return surf
 

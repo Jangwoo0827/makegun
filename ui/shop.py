@@ -12,6 +12,7 @@ from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
 from ui.hud import stat_lines
 from ui.menus import draw_backdrop
+from systems.assets import ASSETS
 from weapons.gun_renderer import draw_gun
 
 if TYPE_CHECKING:
@@ -136,7 +137,8 @@ class ShopState(GameState):
                 preview = dict(s.weapons[self.weapon_index].parts)
                 part = s.library.get(offer.part_id)
                 preview[part.category] = part
-                draw_gun(surface, preview, (rect.x + 70, rect.y + 88), 0.0, 1.6)
+                if not ASSETS.blit_centered(surface, "parts", part.part_id, (rect.centerx, rect.y + 96), (96, 48)):
+                    draw_gun(surface, preview, (rect.x + 70, rect.y + 88), 0.0, 1.6)
                 desc_y = rect.y + 136
             else:
                 desc_y = rect.y + 80

@@ -1,0 +1,324 @@
+{
+ "enemies": {
+  "normal": [
+   36,
+   36
+  ],
+  "fast": [
+   26,
+   26
+  ],
+  "tank": [
+   62,
+   62
+  ],
+  "shooter": [
+   33,
+   33
+  ],
+  "elite": [
+   52,
+   52
+  ],
+  "boss": [
+   110,
+   110
+  ],
+  "mini": [
+   19,
+   19
+  ],
+  "splitter": [
+   48,
+   48
+  ],
+  "bomber": [
+   33,
+   33
+  ],
+  "sniper": [
+   31,
+   31
+  ],
+  "healer": [
+   36,
+   36
+  ],
+  "charger": [
+   40,
+   40
+  ],
+  "summoner": [
+   43,
+   43
+  ],
+  "broodmother": [
+   129,
+   129
+  ]
+ },
+ "player": {
+  "player": [
+   40,
+   40
+  ]
+ },
+ "parts": {
+  "pistol_receiver": [
+   96,
+   48
+  ],
+  "smg_receiver": [
+   96,
+   48
+  ],
+  "rifle_receiver": [
+   96,
+   48
+  ],
+  "shotgun_receiver": [
+   96,
+   48
+  ],
+  "heavy_receiver": [
+   96,
+   48
+  ],
+  "rail_receiver": [
+   96,
+   48
+  ],
+  "carbine_receiver": [
+   96,
+   48
+  ],
+  "blaster_receiver": [
+   96,
+   48
+  ],
+  "sniper_receiver": [
+   96,
+   48
+  ],
+  "minigun_receiver": [
+   96,
+   48
+  ],
+  "standard_barrel": [
+   96,
+   48
+  ],
+  "short_barrel": [
+   96,
+   48
+  ],
+  "long_barrel": [
+   96,
+   48
+  ],
+  "heavy_barrel": [
+   96,
+   48
+  ],
+  "split_barrel": [
+   96,
+   48
+  ],
+  "precision_barrel": [
+   96,
+   48
+  ],
+  "compensator_barrel": [
+   96,
+   48
+  ],
+  "sawed_off_barrel": [
+   96,
+   48
+  ],
+  "sniper_barrel": [
+   96,
+   48
+  ],
+  "triple_barrel": [
+   96,
+   48
+  ],
+  "small_magazine": [
+   96,
+   48
+  ],
+  "extended_magazine": [
+   96,
+   48
+  ],
+  "quick_magazine": [
+   96,
+   48
+  ],
+  "drum_magazine": [
+   96,
+   48
+  ],
+  "belt_feed": [
+   96,
+   48
+  ],
+  "twin_magazine": [
+   96,
+   48
+  ],
+  "hyper_magazine": [
+   96,
+   48
+  ],
+  "single_trigger": [
+   96,
+   48
+  ],
+  "auto_trigger": [
+   96,
+   48
+  ],
+  "burst_trigger": [
+   96,
+   48
+  ],
+  "rapid_trigger": [
+   96,
+   48
+  ],
+  "charge_trigger": [
+   96,
+   48
+  ],
+  "hair_trigger": [
+   96,
+   48
+  ],
+  "double_tap_trigger": [
+   96,
+   48
+  ],
+  "overdrive_trigger": [
+   96,
+   48
+  ],
+  "normal_ammo": [
+   96,
+   48
+  ],
+  "ap_ammo": [
+   96,
+   48
+  ],
+  "explosive_ammo": [
+   96,
+   48
+  ],
+  "incendiary_ammo": [
+   96,
+   48
+  ],
+  "split_ammo": [
+   96,
+   48
+  ],
+  "ricochet_ammo": [
+   96,
+   48
+  ],
+  "hollow_point_ammo": [
+   96,
+   48
+  ],
+  "frost_ammo": [
+   96,
+   48
+  ],
+  "homing_ammo": [
+   96,
+   48
+  ],
+  "plasma_ammo": [
+   96,
+   48
+  ],
+  "no_modifier": [
+   96,
+   48
+  ],
+  "critical_mod": [
+   96,
+   48
+  ],
+  "heavy_mod": [
+   96,
+   48
+  ],
+  "fast_mod": [
+   96,
+   48
+  ],
+  "vampiric_mod": [
+   96,
+   48
+  ],
+  "lucky_mod": [
+   96,
+   48
+  ],
+  "chain_mod": [
+   96,
+   48
+  ],
+  "scope_mod": [
+   96,
+   48
+  ],
+  "berserk_mod": [
+   96,
+   48
+  ],
+  "overcharged_mod": [
+   96,
+   48
+  ],
+  "executioner_mod": [
+   96,
+   48
+  ]
+ },
+ "pickups": {
+  "money": [
+   32,
+   32
+  ],
+  "health": [
+   32,
+   32
+  ],
+  "ammo": [
+   32,
+   32
+  ],
+  "buff": [
+   32,
+   32
+  ],
+  "part": [
+   32,
+   32
+  ]
+ },
+ "tiles": {
+  "floor": [
+   80,
+   80
+  ],
+  "wall": [
+   40,
+   40
+  ]
+ }
+}

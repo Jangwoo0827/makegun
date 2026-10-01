@@ -41,7 +41,8 @@ class LootManager:
             drops.append(Pickup(PickupKind.AMMO, jitter(), value=0.5))
         if random.random() < BUFF_CHANCE * luck_mult:
             drops.append(Pickup(PickupKind.BUFF, jitter(), buff=random.choice(BUFF_TYPES)))
-        if random.random() < PART_CHANCE.get(enemy.enemy_type, 0.01) * luck_mult:
+        part_chance = 1.0 if enemy.is_boss else PART_CHANCE.get(enemy.enemy_type, 0.01)
+        if random.random() < part_chance * luck_mult:
             bonus = 1.0 if enemy.is_boss else (0.5 if enemy.enemy_type == "elite" else 0.0)
             part = self.library.random_part(owned, wave, bonus)
             if part is not None:

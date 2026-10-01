@@ -1,19 +1,336 @@
 {
-  "rapid_fire":   {"name": "RAPID FIRE",   "rarity": "COMMON",    "description": "+15% Fire Rate",           "effects": {"fire_rate_multiplier": 0.15}},
-  "big_bullet":   {"name": "BIG BULLET",   "rarity": "COMMON",    "description": "+20% Damage",              "effects": {"damage_multiplier": 0.20}},
-  "extra_mag":    {"name": "EXTRA MAG",    "rarity": "COMMON",    "description": "+30% Magazine Size",       "effects": {"magazine_multiplier": 0.30}},
-  "vitality":     {"name": "VITALITY",     "rarity": "COMMON",    "description": "+25 Max HP (and heal it)", "effects": {"max_hp": 25}},
-  "sprinter":     {"name": "SPRINTER",     "rarity": "COMMON",    "description": "+10% Move Speed",          "effects": {"move_speed_multiplier": 0.10}},
-  "fast_hands":   {"name": "FAST HANDS",   "rarity": "UNCOMMON",  "description": "-20% Reload Time",         "effects": {"reload_multiplier": -0.20}},
-  "keen_eye":     {"name": "KEEN EYE",     "rarity": "UNCOMMON",  "description": "+8% Crit Chance",          "effects": {"crit_chance": 0.08}},
-  "brutal":       {"name": "BRUTAL",       "rarity": "UNCOMMON",  "description": "+40% Crit Damage",         "effects": {"crit_damage": 0.40}},
-  "velocity":     {"name": "VELOCITY",     "rarity": "UNCOMMON",  "description": "+25% Bullet Speed & Range", "effects": {"bullet_speed_multiplier": 0.25}},
-  "regenerator":  {"name": "REGENERATOR",  "rarity": "UNCOMMON",  "description": "Regenerate 1 HP / sec",    "effects": {"regen": 1.0}},
-  "penetrator":   {"name": "PENETRATOR",   "rarity": "RARE",      "description": "+1 Pierce",                "effects": {"pierce_bonus": 1}},
-  "blood_pact":   {"name": "BLOOD PACT",   "rarity": "RARE",      "description": "+3% Lifesteal",            "effects": {"lifesteal": 0.03}},
-  "fortune":      {"name": "FORTUNE",      "rarity": "RARE",      "description": "+40% Luck",                "effects": {"luck": 0.40}},
-  "double_shot":  {"name": "DOUBLE SHOT",  "rarity": "EPIC",      "description": "+1 Bullet per shot",       "effects": {"bullet_count_bonus": 1}},
-  "overclock":    {"name": "OVERCLOCK",    "rarity": "EPIC",      "description": "+30% Fire Rate, +10% Dmg", "effects": {"fire_rate_multiplier": 0.30, "damage_multiplier": 0.10}},
-  "glass_cannon": {"name": "GLASS CANNON", "rarity": "LEGENDARY", "description": "+60% Damage, -30 Max HP",  "effects": {"damage_multiplier": 0.60, "max_hp": -30}},
-  "bullet_storm": {"name": "BULLET STORM", "rarity": "LEGENDARY", "description": "+2 Bullets, +1 Pierce",    "effects": {"bullet_count_bonus": 2, "pierce_bonus": 1}}
+ "rapid_fire": {
+  "name": "RAPID FIRE",
+  "rarity": "COMMON",
+  "description": "+15% Fire Rate",
+  "effects": {
+   "fire_rate_multiplier": 0.15
+  }
+ },
+ "big_bullet": {
+  "name": "BIG BULLET",
+  "rarity": "COMMON",
+  "description": "+20% Damage",
+  "effects": {
+   "damage_multiplier": 0.2
+  }
+ },
+ "extra_mag": {
+  "name": "EXTRA MAG",
+  "rarity": "COMMON",
+  "description": "+30% Magazine Size",
+  "effects": {
+   "magazine_multiplier": 0.3
+  }
+ },
+ "vitality": {
+  "name": "VITALITY",
+  "rarity": "COMMON",
+  "description": "+25 Max HP (and heal it)",
+  "effects": {
+   "max_hp": 25
+  }
+ },
+ "sprinter": {
+  "name": "SPRINTER",
+  "rarity": "COMMON",
+  "description": "+10% Move Speed",
+  "effects": {
+   "move_speed_multiplier": 0.1
+  }
+ },
+ "fast_hands": {
+  "name": "FAST HANDS",
+  "rarity": "UNCOMMON",
+  "description": "-20% Reload Time",
+  "effects": {
+   "reload_multiplier": -0.2
+  }
+ },
+ "keen_eye": {
+  "name": "KEEN EYE",
+  "rarity": "UNCOMMON",
+  "description": "+8% Crit Chance",
+  "effects": {
+   "crit_chance": 0.08
+  }
+ },
+ "brutal": {
+  "name": "BRUTAL",
+  "rarity": "UNCOMMON",
+  "description": "+40% Crit Damage",
+  "effects": {
+   "crit_damage": 0.4
+  }
+ },
+ "velocity": {
+  "name": "VELOCITY",
+  "rarity": "UNCOMMON",
+  "description": "+25% Bullet Speed & Range",
+  "effects": {
+   "bullet_speed_multiplier": 0.25
+  }
+ },
+ "regenerator": {
+  "name": "REGENERATOR",
+  "rarity": "UNCOMMON",
+  "description": "Regenerate 1 HP / sec",
+  "effects": {
+   "regen": 1.0
+  }
+ },
+ "penetrator": {
+  "name": "PENETRATOR",
+  "rarity": "RARE",
+  "description": "+1 Pierce",
+  "effects": {
+   "pierce_bonus": 1
+  }
+ },
+ "blood_pact": {
+  "name": "BLOOD PACT",
+  "rarity": "RARE",
+  "description": "+3% Lifesteal",
+  "effects": {
+   "lifesteal": 0.03
+  }
+ },
+ "fortune": {
+  "name": "FORTUNE",
+  "rarity": "RARE",
+  "description": "+40% Luck",
+  "effects": {
+   "luck": 0.4
+  }
+ },
+ "double_shot": {
+  "name": "DOUBLE SHOT",
+  "rarity": "EPIC",
+  "description": "+1 Bullet per shot",
+  "effects": {
+   "bullet_count_bonus": 1
+  }
+ },
+ "overclock": {
+  "name": "OVERCLOCK",
+  "rarity": "EPIC",
+  "description": "+30% Fire Rate, +10% Dmg",
+  "effects": {
+   "fire_rate_multiplier": 0.3,
+   "damage_multiplier": 0.1
+  }
+ },
+ "glass_cannon": {
+  "name": "GLASS CANNON",
+  "rarity": "LEGENDARY",
+  "description": "+60% Damage, -30 Max HP",
+  "effects": {
+   "damage_multiplier": 0.6,
+   "max_hp": -30
+  }
+ },
+ "bullet_storm": {
+  "name": "BULLET STORM",
+  "rarity": "LEGENDARY",
+  "description": "+2 Bullets, +1 Pierce",
+  "effects": {
+   "bullet_count_bonus": 2,
+   "pierce_bonus": 1
+  }
+ },
+ "thick_skin": {
+  "name": "THICK SKIN",
+  "rarity": "COMMON",
+  "description": "-8% Damage Taken",
+  "effects": {
+   "damage_reduction": 0.08
+  }
+ },
+ "magnet": {
+  "name": "MAGNET",
+  "rarity": "COMMON",
+  "description": "+50% Pickup Radius",
+  "effects": {
+   "pickup_radius_multiplier": 0.5
+  }
+ },
+ "steady_aim": {
+  "name": "STEADY AIM",
+  "rarity": "COMMON",
+  "description": "-20% Spread",
+  "effects": {
+   "spread_multiplier": -0.2
+  }
+ },
+ "greed": {
+  "name": "GREED",
+  "rarity": "COMMON",
+  "description": "+20% Money from drops",
+  "effects": {
+   "money_multiplier": 0.2
+  }
+ },
+ "hard_hitter": {
+  "name": "HARD HITTER",
+  "rarity": "COMMON",
+  "description": "+40% Knockback",
+  "effects": {
+   "knockback_multiplier": 0.4
+  }
+ },
+ "field_medic": {
+  "name": "FIELD MEDIC",
+  "rarity": "UNCOMMON",
+  "description": "Heal 20% HP after each wave",
+  "effects": {
+   "wave_heal": 0.2
+  }
+ },
+ "scavenger": {
+  "name": "SCAVENGER",
+  "rarity": "UNCOMMON",
+  "description": "Heal 1 HP per kill",
+  "effects": {
+   "heal_on_kill": 1.0
+  }
+ },
+ "evasion": {
+  "name": "EVASION",
+  "rarity": "UNCOMMON",
+  "description": "+0.3s invulnerability after hits",
+  "effects": {
+   "invuln_bonus": 0.3
+  }
+ },
+ "pyromaniac": {
+  "name": "PYROMANIAC",
+  "rarity": "UNCOMMON",
+  "description": "+15% Burn on every bullet",
+  "effects": {
+   "burn_bonus": 0.15
+  }
+ },
+ "cryo_core": {
+  "name": "CRYO CORE",
+  "rarity": "UNCOMMON",
+  "description": "Bullets slow enemies by 20%",
+  "effects": {
+   "slow_bonus": 0.2
+  }
+ },
+ "bouncy": {
+  "name": "BOUNCY",
+  "rarity": "UNCOMMON",
+  "description": "+1 Ricochet",
+  "effects": {
+   "ricochet_bonus": 1
+  }
+ },
+ "big_boom": {
+  "name": "BIG BOOM",
+  "rarity": "RARE",
+  "description": "+30 Explosion radius (explosive guns)",
+  "effects": {
+   "explosion_bonus": 30
+  }
+ },
+ "tesla_coil": {
+  "name": "TESLA COIL",
+  "rarity": "RARE",
+  "description": "Hits chain to +1 enemy",
+  "effects": {
+   "chain_bonus": 1
+  }
+ },
+ "smart_rounds": {
+  "name": "SMART ROUNDS",
+  "rarity": "RARE",
+  "description": "Bullets slightly home in",
+  "effects": {
+   "homing_bonus": 1.5
+  }
+ },
+ "iron_will": {
+  "name": "IRON WILL",
+  "rarity": "RARE",
+  "description": "+50 Max HP, -10% Damage Taken",
+  "effects": {
+   "max_hp": 50,
+   "damage_reduction": 0.1
+  }
+ },
+ "gold_rush": {
+  "name": "GOLD RUSH",
+  "rarity": "RARE",
+  "description": "+50% Money, +20% Luck",
+  "effects": {
+   "money_multiplier": 0.5,
+   "luck": 0.2
+  }
+ },
+ "deadeye": {
+  "name": "DEADEYE",
+  "rarity": "EPIC",
+  "description": "+15% Crit, +60% Crit Damage",
+  "effects": {
+   "crit_chance": 0.15,
+   "crit_damage": 0.6
+  }
+ },
+ "juggernaut": {
+  "name": "JUGGERNAUT",
+  "rarity": "EPIC",
+  "description": "+80 Max HP, 2 HP/s regen, -10% speed",
+  "effects": {
+   "max_hp": 80,
+   "regen": 2.0,
+   "move_speed_multiplier": -0.1
+  }
+ },
+ "quick_draw": {
+  "name": "QUICK DRAW",
+  "rarity": "EPIC",
+  "description": "-35% Reload, +20% Magazine",
+  "effects": {
+   "reload_multiplier": -0.35,
+   "magazine_multiplier": 0.2
+  }
+ },
+ "storm_caller": {
+  "name": "STORM CALLER",
+  "rarity": "EPIC",
+  "description": "+2 Chain, +10% Fire Rate",
+  "effects": {
+   "chain_bonus": 2,
+   "fire_rate_multiplier": 0.1
+  }
+ },
+ "time_dilation": {
+  "name": "TIME DILATION",
+  "rarity": "LEGENDARY",
+  "description": "Bullets slow 35%, +1s invulnerability",
+  "effects": {
+   "slow_bonus": 0.35,
+   "invuln_bonus": 1.0
+  }
+ },
+ "midas": {
+  "name": "MIDAS TOUCH",
+  "rarity": "LEGENDARY",
+  "description": "x2 Money, +50% Luck",
+  "effects": {
+   "money_multiplier": 1.0,
+   "luck": 0.5
+  }
+ },
+ "god_mode": {
+  "name": "DEMIGOD",
+  "rarity": "LEGENDARY",
+  "description": "+30% Damage, Fire Rate & Speed",
+  "effects": {
+   "damage_multiplier": 0.3,
+   "fire_rate_multiplier": 0.3,
+   "move_speed_multiplier": 0.3
+  }
+ }
 }

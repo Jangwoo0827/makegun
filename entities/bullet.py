@@ -29,6 +29,8 @@ class Bullet:
         chain: int = 0,
         lifesteal: float = 0.0,
         is_fragment: bool = False,
+        slow: float = 0.0,
+        homing: float = 0.0,
     ) -> None:
         self.pos: pygame.Vector2 = pygame.Vector2(pos)
         self.prev_pos: pygame.Vector2 = pygame.Vector2(pos)
@@ -50,6 +52,8 @@ class Bullet:
         self.chain: int = chain
         self.lifesteal: float = lifesteal
         self.is_fragment: bool = is_fragment
+        self.slow: float = slow
+        self.homing: float = homing
         self.hit_ids: set[int] = set()
         self.alive: bool = True
         self._first_frame: bool = True

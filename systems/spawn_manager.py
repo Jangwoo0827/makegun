@@ -6,7 +6,8 @@ import random
 import pygame
 
 import settings
-from entities.enemy import Enemy, EnemyData, WaveScaling, create_enemy
+from entities.enemy import Enemy, EnemyData, WaveScaling
+from entities.enemy_types import create_enemy
 from systems.collision import resolve_walls
 
 MIN_SPAWN_DIST: float = 420.0

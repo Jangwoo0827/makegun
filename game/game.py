@@ -13,6 +13,7 @@ from entities.enemy import EnemyData, load_enemy_data
 from game.play_state import PlayState
 from game.session import RunSession, default_starter
 from game.state import GameState, StateID
+from systems.save_manager import SaveManager
 from systems.shop_manager import ShopManager
 from systems.sound import SoundManager
 from systems.upgrade_manager import UpgradeManager
@@ -67,6 +68,7 @@ class Game:
         self.sound: SoundManager = SoundManager()
         self.sound.enabled = self.options.sound
 
+        self.saves: SaveManager = SaveManager()
         self.session: RunSession | None = None
         self.play_state: PlayState | None = None
         self.shop: ShopManager | None = None
@@ -100,6 +102,42 @@ class Game:
         self.shop = None
         self.play_state = PlayState(self)
         self.change(StateID.GAME)
+
+    def continue_run(self) -> bool:
+        """Load the saved run. Returns False if there is no valid save."""
+        loaded = self.saves.load(self.library, self.upgrades)
+        if loaded is None:
+            return False
+        self.session, phase = loaded
+        self.shop = None
+        self.play_state = PlayState(self, start_wave=(phase == "wave"))
+        while self.stack:
+            self.stack.pop().on_exit()
+        if phase == "wave":
+            self.push(StateID.GAME)
+        else:
+            # Put GAME underneath without triggering its "start next wave" on_enter.
+            self.stack.append(self.play_state)
+            self.push(StateID.WAVE_CLEAR if self.session.pending_upgrades else StateID.INTERMISSION)
+        return True
+
+    def save_run(self) -> None:
+        """Save the current run from wherever the player is."""
+        if self.session is None or self.play_state is None or not self.session.player.alive:
+            return
+        ps = self.play_state
+        if ps.awaiting_next_wave:
+            phase = "wave_clear" if self.session.pending_upgrades else "intermission"
+            self.saves.save(self.session, phase, ps.waves.wave)
+        else:  # mid-wave: keep progress, restart this wave on continue
+            self.saves.save(self.session, "wave", max(0, ps.waves.wave - 1))
+
+    def save_and_quit_to_menu(self) -> None:
+        self.save_run()
+        self.session = None
+        self.play_state = None
+        self.shop = None
+        self.change(StateID.MAIN_MENU)
 
     def end_run(self) -> None:
         self.session = None
@@ -150,6 +188,7 @@ class Game:
         self.push(state_id)
 
     def quit(self) -> None:
+        self.save_run()  # closing the window mid-run keeps progress
         self.running = False
 
     # -------------------------------------------------------------- main loop

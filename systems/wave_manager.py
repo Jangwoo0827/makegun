@@ -25,6 +25,11 @@ def is_boss_wave(wave: int) -> bool:
     return wave > 0 and wave % settings.BOSS_WAVE_INTERVAL == 0
 
 
+def boss_for_wave(wave: int) -> str:
+    """Bosses alternate: THE GUNNER on waves 10, 30, ... and THE BROODMOTHER on 20, 40, ..."""
+    return "boss" if (wave // settings.BOSS_WAVE_INTERVAL) % 2 == 1 else "broodmother"
+
+
 def build_wave(wave: int) -> list[str]:
     """Return the ordered list of enemy types for a wave."""
     count = 6 + int(wave * 2.2)
@@ -35,8 +40,20 @@ def build_wave(wave: int) -> list[str]:
         pool.append(("shooter", 3.0 + wave * 0.25))
     if wave >= 5:
         pool.append(("tank", 2.0 + wave * 0.2))
+    if wave >= 4:
+        pool.append(("charger", 1.5 + wave * 0.15))
+    if wave >= 6:
+        pool.append(("bomber", 2.0 + wave * 0.15))
+    if wave >= 7:
+        pool.append(("splitter", 1.5 + wave * 0.12))
+    if wave >= 8:
+        pool.append(("sniper", 1.0 + wave * 0.1))
+    if wave >= 9:
+        pool.append(("healer", 0.8 + wave * 0.05))
     if wave >= 11:
         pool.append(("elite", 0.4 + wave * 0.03))
+    if wave >= 12:
+        pool.append(("summoner", 0.6 + wave * 0.05))
     types, weights = zip(*pool)
     enemies = random.choices(list(types), weights=list(weights), k=count)
     if wave % settings.ELITE_WAVE_INTERVAL == 0 and wave >= settings.ELITE_WAVE_INTERVAL * 2:
@@ -46,7 +63,7 @@ def build_wave(wave: int) -> list[str]:
         enemies.append("elite")  # first taste of an elite at wave 5
     if is_boss_wave(wave):
         enemies = enemies[: count // 2]
-        enemies.insert(min(3, len(enemies)), "boss")
+        enemies.insert(min(3, len(enemies)), boss_for_wave(wave))
     return enemies
 
 

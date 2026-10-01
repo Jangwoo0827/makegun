@@ -10,6 +10,10 @@ from weapons.weapon import Weapon
 
 random.seed(1)
 g = Game(headless=True)
+import tempfile
+g.saves.path = os.path.join(tempfile.gettempdir(), "gun_designer_test_save.json")
+g.saves.delete()
+g.change(StateID.MAIN_MENU)
 DT = 1 / 60
 mouse = {"pos": (640, 360), "down": False}
 keys = set()
@@ -31,7 +35,8 @@ def key(k):
 # 1. every part combination computes sane stats & fires
 lib = g.library
 n = 0
-for combo in itertools.product(*[lib.by_category[c] for c in PART_ORDER]):
+for _ in range(30000):
+    combo = [random.choice(lib.by_category[c]) for c in PART_ORDER]
     w = Weapon("t", dict(zip(PART_ORDER, combo)))
     s = w.stats
     assert s.damage > 0 and s.fire_rate > 0 and s.magazine_size >= 1 and s.dps > 0, combo
@@ -64,7 +69,9 @@ def bot_frames(frames, god=True):
             mouse["down"] = not mouse["down"] if p.weapon.stats.fire_mode in ("single", "charge", "burst") and random.random() < 0.15 else True
             d = t.pos - p.pos
             keys.clear()
-            if d.length() < 250:
+            if d.length() > 420:
+                keys.add(pygame.K_d if d.x > 0 else pygame.K_a); keys.add(pygame.K_s if d.y > 0 else pygame.K_w)
+            elif d.length() < 250:
                 if d.x > 0: keys.add(pygame.K_a)
                 else: keys.add(pygame.K_d)
                 if d.y > 0: keys.add(pygame.K_w)
@@ -110,14 +117,49 @@ for wave_iter in range(12):
     for cat in PART_ORDER:
         owned = [p for p in lib.by_category[cat] if p.part_id in sess.owned_parts]
         choice = random.choice(owned)
+        ids = [p.part_id for p in lib.by_category[cat]]
+        row = g.top.rows[cat]
+        # scroll with the wheel / arrows like a player would, then click
+        pygame.mouse.get_pos = lambda r=row: r.viewport.center
+        pygame.event.post(pygame.event.Event(pygame.MOUSEWHEEL, x=0, y=-3, flipped=False)); step(30)
+        row.ensure_visible(ids.index(choice.part_id)); step(40)
         for btn, part in g.top.part_buttons:
-            if part.part_id == choice.part_id: click(btn); break
+            if part.part_id == choice.part_id:
+                assert row.viewport.collidepoint(btn.rect.center), (choice.part_id, btn.rect, row.viewport)
+                click(btn); break
+        assert g.top.draft.part(cat).part_id == choice.part_id, choice.part_id
+        pygame.mouse.get_pos = lambda: mouse["pos"]
         pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=g.top.part_buttons[-1][0].rect.center, rel=(0,0), buttons=(0,0,0))); step()
     key(pygame.K_RETURN)  # save
     key(pygame.K_ESCAPE)
     assert g.top.state_id == StateID.INTERMISSION
+    if w == 2:
+        # --- save at intermission -> main menu -> continue
+        snap = (sess.money, set(sess.owned_parts), len(sess.upgrades_taken), [x.name for x in sess.weapons])
+        g.quit(); g.running = True  # window-close path saves too
+        assert g.saves.peek()["phase"] == "intermission"
+        g.save_and_quit_to_menu(); assert g.top.state_id == StateID.MAIN_MENU
+        assert g.top.buttons.buttons[0].text == "CONTINUE"
+        click(g.top.buttons.buttons[0])
+        assert g.top.state_id == StateID.INTERMISSION, g.top
+        ps = g.play_state; sess = g.session
+        assert (sess.money, set(sess.owned_parts), len(sess.upgrades_taken), [x.name for x in sess.weapons]) == snap
+        assert ps.waves.wave == 2
+        print("save/continue at intermission ok")
     key(pygame.K_SPACE)
     assert g.top.state_id == StateID.GAME
+    if w == 3:
+        # --- mid-wave save & quit from pause -> continue restarts wave 4
+        bot_frames(300)
+        money_mid = sess.money
+        key(pygame.K_ESCAPE); assert g.top.state_id == StateID.PAUSE
+        click(g.top.buttons.buttons[2])
+        assert g.top.state_id == StateID.MAIN_MENU and g.saves.peek()["phase"] == "wave"
+        click(g.top.buttons.buttons[0])
+        assert g.top.state_id == StateID.GAME
+        ps = g.play_state; sess = g.session
+        assert ps.waves.wave == 4 and sess.money == money_mid, (ps.waves.wave, sess.money, money_mid)
+        print("mid-wave save/continue ok")
     for i in range(len(sess.weapons)):
         key(pygame.K_1 + i); step(5)
 
@@ -131,4 +173,23 @@ assert g.top.state_id == StateID.GAME_OVER, g.top
 step(3)
 click(g.top.buttons.buttons[1])
 assert g.top.state_id == StateID.MAIN_MENU and g.session is None
+assert not g.saves.has_save(), "game over must delete the save"
+
+# --- bosses: Broodmother at wave 20 spawns, fights and dies
+from systems.wave_manager import build_wave
+assert "broodmother" in build_wave(20) and "boss" in build_wave(10)
+g.start_new_run(); ps = g.play_state; sess = g.session
+from entities.enemy_types import create_enemy
+for et in ["broodmother", "splitter", "bomber", "sniper", "healer", "charger", "summoner", "mini"]:
+    e = ps.spawner.spawn_now(et, sess.player.pos); ps._add_enemy(e)
+ps.waves.phase = ps.waves.phase.ACTIVE
+for _ in range(60 * 20):
+    sess.player.hp = sess.player.max_hp
+    step()
+types = {e.enemy_type for e in ps.world.enemies}
+print("alive after 20s:", sorted(types), "enemy bullets:", len(ps.world.enemy_bullets))
+for e in ps.world.enemies: e.take_damage(1e9, True)
+step(3)
+print("kills:", sess.kills)
+g.end_run()
 print("ALL OK")

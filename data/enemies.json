@@ -1,32 +1,268 @@
 {
-  "normal": {
-    "name": "Grunt", "behavior": "melee", "hp": 30, "speed": 115, "damage": 10,
-    "radius": 15, "color": [220, 70, 70], "reward": 10, "armor": 0.0,
-    "attack_range": 0, "attack_cooldown": 0.8, "projectile_speed": 0, "shape": "circle"
-  },
-  "fast": {
-    "name": "Runner", "behavior": "melee", "hp": 16, "speed": 215, "damage": 7,
-    "radius": 11, "color": [255, 130, 80], "reward": 15, "armor": 0.0,
-    "attack_range": 0, "attack_cooldown": 0.6, "projectile_speed": 0, "shape": "triangle"
-  },
-  "tank": {
-    "name": "Brute", "behavior": "melee", "hp": 160, "speed": 65, "damage": 22,
-    "radius": 26, "color": [170, 40, 60], "reward": 30, "armor": 0.3,
-    "attack_range": 0, "attack_cooldown": 1.1, "projectile_speed": 0, "shape": "square"
-  },
-  "shooter": {
-    "name": "Gunner", "behavior": "ranged", "hp": 26, "speed": 95, "damage": 8,
-    "radius": 14, "color": [230, 90, 160], "reward": 20, "armor": 0.0,
-    "attack_range": 380, "attack_cooldown": 1.6, "projectile_speed": 330, "shape": "diamond"
-  },
-  "elite": {
-    "name": "Elite Reaver", "behavior": "elite", "hp": 380, "speed": 120, "damage": 20,
-    "radius": 22, "color": [255, 60, 200], "reward": 100, "armor": 0.15,
-    "attack_range": 420, "attack_cooldown": 3.2, "projectile_speed": 300, "shape": "hexagon"
-  },
-  "boss": {
-    "name": "THE GUNNER", "behavior": "boss", "hp": 4200, "speed": 85, "damage": 14,
-    "radius": 46, "color": [255, 40, 40], "reward": 500, "armor": 0.1,
-    "attack_range": 520, "attack_cooldown": 1.2, "projectile_speed": 300, "shape": "boss"
-  }
+ "normal": {
+  "name": "Grunt",
+  "behavior": "melee",
+  "hp": 30,
+  "speed": 115,
+  "damage": 10,
+  "radius": 15,
+  "color": [
+   220,
+   70,
+   70
+  ],
+  "reward": 10,
+  "armor": 0.0,
+  "attack_range": 0,
+  "attack_cooldown": 0.8,
+  "projectile_speed": 0,
+  "shape": "circle"
+ },
+ "fast": {
+  "name": "Runner",
+  "behavior": "melee",
+  "hp": 16,
+  "speed": 215,
+  "damage": 7,
+  "radius": 11,
+  "color": [
+   255,
+   130,
+   80
+  ],
+  "reward": 15,
+  "armor": 0.0,
+  "attack_range": 0,
+  "attack_cooldown": 0.6,
+  "projectile_speed": 0,
+  "shape": "triangle"
+ },
+ "tank": {
+  "name": "Brute",
+  "behavior": "melee",
+  "hp": 160,
+  "speed": 65,
+  "damage": 22,
+  "radius": 26,
+  "color": [
+   170,
+   40,
+   60
+  ],
+  "reward": 30,
+  "armor": 0.3,
+  "attack_range": 0,
+  "attack_cooldown": 1.1,
+  "projectile_speed": 0,
+  "shape": "square"
+ },
+ "shooter": {
+  "name": "Gunner",
+  "behavior": "ranged",
+  "hp": 26,
+  "speed": 95,
+  "damage": 8,
+  "radius": 14,
+  "color": [
+   230,
+   90,
+   160
+  ],
+  "reward": 20,
+  "armor": 0.0,
+  "attack_range": 380,
+  "attack_cooldown": 1.6,
+  "projectile_speed": 330,
+  "shape": "diamond"
+ },
+ "elite": {
+  "name": "Elite Reaver",
+  "behavior": "elite",
+  "hp": 380,
+  "speed": 120,
+  "damage": 20,
+  "radius": 22,
+  "color": [
+   255,
+   60,
+   200
+  ],
+  "reward": 100,
+  "armor": 0.15,
+  "attack_range": 420,
+  "attack_cooldown": 3.2,
+  "projectile_speed": 300,
+  "shape": "hexagon"
+ },
+ "boss": {
+  "name": "THE GUNNER",
+  "behavior": "boss",
+  "hp": 4200,
+  "speed": 85,
+  "damage": 14,
+  "radius": 46,
+  "color": [
+   255,
+   40,
+   40
+  ],
+  "reward": 500,
+  "armor": 0.1,
+  "attack_range": 520,
+  "attack_cooldown": 1.2,
+  "projectile_speed": 300,
+  "shape": "boss"
+ },
+ "mini": {
+  "name": "Mite",
+  "behavior": "melee",
+  "hp": 8,
+  "speed": 180,
+  "damage": 5,
+  "radius": 8,
+  "color": [
+   255,
+   160,
+   160
+  ],
+  "reward": 3,
+  "armor": 0.0,
+  "attack_range": 0,
+  "attack_cooldown": 0.6,
+  "projectile_speed": 0,
+  "shape": "circle"
+ },
+ "splitter": {
+  "name": "Splitter",
+  "behavior": "melee",
+  "hp": 55,
+  "speed": 95,
+  "damage": 12,
+  "radius": 20,
+  "color": [
+   200,
+   90,
+   255
+  ],
+  "reward": 25,
+  "armor": 0.0,
+  "attack_range": 0,
+  "attack_cooldown": 0.9,
+  "projectile_speed": 0,
+  "shape": "circle"
+ },
+ "bomber": {
+  "name": "Bomber",
+  "behavior": "bomber",
+  "hp": 22,
+  "speed": 165,
+  "damage": 30,
+  "radius": 14,
+  "color": [
+   255,
+   200,
+   40
+  ],
+  "reward": 20,
+  "armor": 0.0,
+  "attack_range": 0,
+  "attack_cooldown": 1.0,
+  "projectile_speed": 0,
+  "shape": "circle"
+ },
+ "sniper": {
+  "name": "Sniper",
+  "behavior": "sniper",
+  "hp": 30,
+  "speed": 80,
+  "damage": 22,
+  "radius": 13,
+  "color": [
+   255,
+   255,
+   140
+  ],
+  "reward": 30,
+  "armor": 0.0,
+  "attack_range": 600,
+  "attack_cooldown": 3.2,
+  "projectile_speed": 900,
+  "shape": "diamond"
+ },
+ "healer": {
+  "name": "Medic",
+  "behavior": "healer",
+  "hp": 45,
+  "speed": 90,
+  "damage": 6,
+  "radius": 15,
+  "color": [
+   90,
+   230,
+   120
+  ],
+  "reward": 30,
+  "armor": 0.0,
+  "attack_range": 330,
+  "attack_cooldown": 3.5,
+  "projectile_speed": 0,
+  "shape": "circle"
+ },
+ "charger": {
+  "name": "Charger",
+  "behavior": "charger",
+  "hp": 70,
+  "speed": 90,
+  "damage": 18,
+  "radius": 17,
+  "color": [
+   255,
+   140,
+   40
+  ],
+  "reward": 25,
+  "armor": 0.1,
+  "attack_range": 360,
+  "attack_cooldown": 3.0,
+  "projectile_speed": 0,
+  "shape": "triangle"
+ },
+ "summoner": {
+  "name": "Summoner",
+  "behavior": "summoner",
+  "hp": 80,
+  "speed": 70,
+  "damage": 8,
+  "radius": 18,
+  "color": [
+   160,
+   80,
+   220
+  ],
+  "reward": 40,
+  "armor": 0.0,
+  "attack_range": 480,
+  "attack_cooldown": 5.0,
+  "projectile_speed": 0,
+  "shape": "hexagon"
+ },
+ "broodmother": {
+  "name": "THE BROODMOTHER",
+  "behavior": "boss",
+  "hp": 6500,
+  "speed": 70,
+  "damage": 16,
+  "radius": 54,
+  "color": [
+   110,
+   170,
+   60
+  ],
+  "reward": 800,
+  "armor": 0.1,
+  "attack_range": 500,
+  "attack_cooldown": 1.6,
+  "projectile_speed": 280,
+  "shape": "boss"
+ }
 }

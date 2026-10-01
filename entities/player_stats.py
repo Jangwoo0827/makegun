@@ -23,6 +23,20 @@ class PlayerStats:
     lifesteal: float = 0.0
     luck: float = 0.0
     regen: float = 0.0
+    damage_reduction: float = 0.0
+    pickup_radius_multiplier: float = 1.0
+    money_multiplier: float = 1.0
+    spread_multiplier: float = 1.0
+    knockback_multiplier: float = 1.0
+    explosion_bonus: float = 0.0
+    burn_bonus: float = 0.0
+    chain_bonus: int = 0
+    ricochet_bonus: int = 0
+    homing_bonus: float = 0.0
+    slow_bonus: float = 0.0
+    heal_on_kill: float = 0.0
+    wave_heal: float = 0.0
+    invuln_bonus: float = 0.0
 
     def apply_effects(self, effects: dict[str, float]) -> None:
         """Additively apply an upgrade's effect dict. Unknown keys raise KeyError."""
@@ -37,6 +51,8 @@ class PlayerStats:
             setattr(self, key, new_value)
         self.max_hp = max(10.0, self.max_hp)
         self.reload_multiplier = max(0.2, self.reload_multiplier)
+        self.spread_multiplier = max(0.1, self.spread_multiplier)
+        self.damage_reduction = min(0.7, self.damage_reduction)
 
     def copy(self) -> "PlayerStats":
         return replace(self)

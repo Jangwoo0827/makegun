@@ -60,6 +60,14 @@ def segment_hits_circle(p0: pygame.Vector2, p1: pygame.Vector2, center: pygame.V
     return (center - closest).length_squared() <= radius * radius
 
 
+def line_of_sight(a: pygame.Vector2, b: pygame.Vector2, walls: list[pygame.Rect]) -> bool:
+    """True if the segment a-b crosses no wall."""
+    for wall in walls:
+        if wall.clipline(a.x, a.y, b.x, b.y):
+            return False
+    return True
+
+
 def bullet_wall_hit(bullet: Bullet, walls: list[pygame.Rect]) -> pygame.Rect | None:
     for wall in walls:
         if wall.collidepoint(bullet.pos.x, bullet.pos.y):

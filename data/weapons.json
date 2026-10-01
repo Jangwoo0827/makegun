@@ -1,241 +1,1087 @@
 {
   "receiver": {
     "pistol_receiver": {
-      "name": "Pistol Receiver", "rarity": "COMMON", "price": 0,
+      "name": "Pistol Receiver",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "Reliable all-rounder. Decent damage, quick reload.",
-      "base": {"damage": 14, "fire_rate": 4.0, "magazine_size": 12, "reload_time": 1.1,
-               "bullet_speed": 850, "bullet_count": 1, "spread": 3.0, "range": 650, "knockback": 80},
-      "visual": {"length": 30, "height": 14, "color": [150, 156, 172]}
+      "base": {
+        "damage": 14,
+        "fire_rate": 4.0,
+        "magazine_size": 12,
+        "reload_time": 1.1,
+        "bullet_speed": 850,
+        "bullet_count": 1,
+        "spread": 3.0,
+        "range": 650,
+        "knockback": 80
+      },
+      "visual": {
+        "length": 30,
+        "height": 14,
+        "color": [
+          150,
+          156,
+          172
+        ]
+      }
     },
     "smg_receiver": {
-      "name": "SMG Receiver", "rarity": "COMMON", "price": 150,
+      "name": "SMG Receiver",
+      "rarity": "COMMON",
+      "price": 150,
       "description": "High fire rate, low damage, wide spread.",
-      "base": {"damage": 8, "fire_rate": 11.0, "magazine_size": 30, "reload_time": 1.6,
-               "bullet_speed": 800, "bullet_count": 1, "spread": 7.0, "range": 520, "knockback": 40},
-      "visual": {"length": 36, "height": 15, "color": [110, 130, 150]}
+      "base": {
+        "damage": 8,
+        "fire_rate": 11.0,
+        "magazine_size": 30,
+        "reload_time": 1.6,
+        "bullet_speed": 800,
+        "bullet_count": 1,
+        "spread": 7.0,
+        "range": 520,
+        "knockback": 40
+      },
+      "visual": {
+        "length": 36,
+        "height": 15,
+        "color": [
+          110,
+          130,
+          150
+        ]
+      }
     },
     "rifle_receiver": {
-      "name": "Rifle Receiver", "rarity": "UNCOMMON", "price": 220,
+      "name": "Rifle Receiver",
+      "rarity": "UNCOMMON",
+      "price": 220,
       "description": "Hard-hitting, accurate and long ranged.",
-      "base": {"damage": 26, "fire_rate": 3.2, "magazine_size": 20, "reload_time": 1.9,
-               "bullet_speed": 1150, "bullet_count": 1, "spread": 1.5, "range": 950, "knockback": 120},
-      "visual": {"length": 46, "height": 14, "color": [128, 110, 86]}
+      "base": {
+        "damage": 26,
+        "fire_rate": 3.2,
+        "magazine_size": 20,
+        "reload_time": 1.9,
+        "bullet_speed": 1150,
+        "bullet_count": 1,
+        "spread": 1.5,
+        "range": 950,
+        "knockback": 120
+      },
+      "visual": {
+        "length": 46,
+        "height": 14,
+        "color": [
+          128,
+          110,
+          86
+        ]
+      }
     },
     "shotgun_receiver": {
-      "name": "Shotgun Receiver", "rarity": "UNCOMMON", "price": 220,
+      "name": "Shotgun Receiver",
+      "rarity": "UNCOMMON",
+      "price": 220,
       "description": "Fires a wide cone of pellets. Devastating up close.",
-      "base": {"damage": 9, "fire_rate": 1.6, "magazine_size": 6, "reload_time": 2.0,
-               "bullet_speed": 760, "bullet_count": 7, "spread": 22.0, "range": 420, "knockback": 160},
-      "visual": {"length": 42, "height": 18, "color": [150, 96, 70]}
+      "base": {
+        "damage": 9,
+        "fire_rate": 1.6,
+        "magazine_size": 6,
+        "reload_time": 2.0,
+        "bullet_speed": 760,
+        "bullet_count": 7,
+        "spread": 22.0,
+        "range": 420,
+        "knockback": 160
+      },
+      "visual": {
+        "length": 42,
+        "height": 18,
+        "color": [
+          150,
+          96,
+          70
+        ]
+      }
     },
     "heavy_receiver": {
-      "name": "Heavy Receiver", "rarity": "RARE", "price": 420,
+      "name": "Heavy Receiver",
+      "rarity": "RARE",
+      "price": 420,
       "description": "Huge sustained output. Slows you down.",
-      "base": {"damage": 17, "fire_rate": 7.5, "magazine_size": 60, "reload_time": 3.2,
-               "bullet_speed": 900, "bullet_count": 1, "spread": 6.0, "range": 750, "knockback": 100,
-               "move_speed_mult": 0.85},
-      "visual": {"length": 52, "height": 22, "color": [90, 98, 84]}
+      "base": {
+        "damage": 17,
+        "fire_rate": 7.5,
+        "magazine_size": 60,
+        "reload_time": 3.2,
+        "bullet_speed": 900,
+        "bullet_count": 1,
+        "spread": 6.0,
+        "range": 750,
+        "knockback": 100,
+        "move_speed_mult": 0.85
+      },
+      "visual": {
+        "length": 52,
+        "height": 22,
+        "color": [
+          90,
+          98,
+          84
+        ]
+      }
     },
     "rail_receiver": {
-      "name": "Rail Receiver", "rarity": "LEGENDARY", "price": 950,
+      "name": "Rail Receiver",
+      "rarity": "LEGENDARY",
+      "price": 950,
       "description": "Magnetic accelerator. Enormous damage that pierces lines of enemies.",
-      "base": {"damage": 75, "fire_rate": 1.1, "magazine_size": 5, "reload_time": 2.4,
-               "bullet_speed": 1800, "bullet_count": 1, "spread": 0.5, "range": 1300, "knockback": 220,
-               "pierce": 4},
-      "visual": {"length": 50, "height": 16, "color": [80, 200, 230]}
+      "base": {
+        "damage": 75,
+        "fire_rate": 1.1,
+        "magazine_size": 5,
+        "reload_time": 2.4,
+        "bullet_speed": 1800,
+        "bullet_count": 1,
+        "spread": 0.5,
+        "range": 1300,
+        "knockback": 220,
+        "pierce": 4
+      },
+      "visual": {
+        "length": 50,
+        "height": 16,
+        "color": [
+          80,
+          200,
+          230
+        ]
+      }
+    },
+    "carbine_receiver": {
+      "name": "Carbine Receiver",
+      "rarity": "UNCOMMON",
+      "price": 200,
+      "description": "Mid-range workhorse. Good rate, good damage.",
+      "base": {
+        "damage": 15,
+        "fire_rate": 6.5,
+        "magazine_size": 25,
+        "reload_time": 1.6,
+        "bullet_speed": 1000,
+        "bullet_count": 1,
+        "spread": 3.5,
+        "range": 780,
+        "knockback": 70
+      },
+      "visual": {
+        "length": 40,
+        "height": 13,
+        "color": [
+          96,
+          110,
+          96
+        ]
+      }
+    },
+    "blaster_receiver": {
+      "name": "Blaster Receiver",
+      "rarity": "RARE",
+      "price": 380,
+      "description": "Energy pistol. Fast reload, bullets burn a little.",
+      "base": {
+        "damage": 20,
+        "fire_rate": 5.0,
+        "magazine_size": 16,
+        "reload_time": 0.8,
+        "bullet_speed": 950,
+        "bullet_count": 1,
+        "spread": 2.0,
+        "range": 700,
+        "knockback": 60,
+        "burn": 0.15
+      },
+      "visual": {
+        "length": 34,
+        "height": 16,
+        "color": [
+          90,
+          140,
+          220
+        ]
+      }
+    },
+    "sniper_receiver": {
+      "name": "Sniper Receiver",
+      "rarity": "EPIC",
+      "price": 620,
+      "description": "One shot, one kill. Huge damage and range, slow.",
+      "base": {
+        "damage": 95,
+        "fire_rate": 0.9,
+        "magazine_size": 5,
+        "reload_time": 2.6,
+        "bullet_speed": 1700,
+        "bullet_count": 1,
+        "spread": 0.3,
+        "range": 1500,
+        "knockback": 250,
+        "pierce": 2,
+        "crit_chance": 0.1
+      },
+      "visual": {
+        "length": 56,
+        "height": 13,
+        "color": [
+          70,
+          80,
+          70
+        ]
+      }
+    },
+    "minigun_receiver": {
+      "name": "Minigun Receiver",
+      "rarity": "EPIC",
+      "price": 650,
+      "description": "Spins up a wall of lead. Very slow movement.",
+      "base": {
+        "damage": 9,
+        "fire_rate": 22.0,
+        "magazine_size": 150,
+        "reload_time": 4.0,
+        "bullet_speed": 950,
+        "bullet_count": 1,
+        "spread": 9.0,
+        "range": 650,
+        "knockback": 35,
+        "move_speed_mult": 0.75
+      },
+      "visual": {
+        "length": 58,
+        "height": 24,
+        "color": [
+          110,
+          110,
+          118
+        ]
+      }
     }
   },
   "barrel": {
     "standard_barrel": {
-      "name": "Standard Barrel", "rarity": "COMMON", "price": 0,
+      "name": "Standard Barrel",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "No bonuses, no drawbacks.",
-      "visual": {"length": 22, "width": 6, "count": 1}
+      "visual": {
+        "length": 22,
+        "width": 6,
+        "count": 1
+      }
     },
     "short_barrel": {
-      "name": "Short Barrel", "rarity": "COMMON", "price": 0,
+      "name": "Short Barrel",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "+20% fire rate, -20% range, more spread.",
-      "mult": {"fire_rate": 1.2, "range": 0.8, "spread": 1.2},
-      "visual": {"length": 12, "width": 7, "count": 1}
+      "mult": {
+        "fire_rate": 1.2,
+        "range": 0.8,
+        "spread": 1.2
+      },
+      "visual": {
+        "length": 12,
+        "width": 7,
+        "count": 1
+      }
     },
     "long_barrel": {
-      "name": "Long Barrel", "rarity": "UNCOMMON", "price": 160,
+      "name": "Long Barrel",
+      "rarity": "UNCOMMON",
+      "price": 160,
       "description": "+35% range, much tighter spread, faster bullets. -10% fire rate.",
-      "mult": {"range": 1.35, "spread": 0.55, "bullet_speed": 1.2, "fire_rate": 0.9},
-      "visual": {"length": 40, "width": 5, "count": 1}
+      "mult": {
+        "range": 1.35,
+        "spread": 0.55,
+        "bullet_speed": 1.2,
+        "fire_rate": 0.9
+      },
+      "visual": {
+        "length": 40,
+        "width": 5,
+        "count": 1
+      }
     },
     "heavy_barrel": {
-      "name": "Heavy Barrel", "rarity": "UNCOMMON", "price": 180,
+      "name": "Heavy Barrel",
+      "rarity": "UNCOMMON",
+      "price": 180,
       "description": "+35% damage and knockback. -10% move speed and fire rate.",
-      "mult": {"damage": 1.35, "move_speed_mult": 0.9, "fire_rate": 0.9, "knockback": 1.5},
-      "visual": {"length": 26, "width": 11, "count": 1}
+      "mult": {
+        "damage": 1.35,
+        "move_speed_mult": 0.9,
+        "fire_rate": 0.9,
+        "knockback": 1.5
+      },
+      "visual": {
+        "length": 26,
+        "width": 11,
+        "count": 1
+      }
     },
     "split_barrel": {
-      "name": "Split Barrel", "rarity": "RARE", "price": 320,
+      "name": "Split Barrel",
+      "rarity": "RARE",
+      "price": 320,
       "description": "+1 projectile per shot. -20% damage, wider spread.",
-      "add": {"bullet_count": 1},
-      "mult": {"damage": 0.8, "spread": 1.3},
-      "visual": {"length": 24, "width": 5, "count": 2}
+      "add": {
+        "bullet_count": 1
+      },
+      "mult": {
+        "damage": 0.8,
+        "spread": 1.3
+      },
+      "visual": {
+        "length": 24,
+        "width": 5,
+        "count": 2
+      }
     },
     "precision_barrel": {
-      "name": "Precision Barrel", "rarity": "EPIC", "price": 520,
+      "name": "Precision Barrel",
+      "rarity": "EPIC",
+      "price": 520,
       "description": "+15% crit chance, +15% damage, laser-tight spread.",
-      "add": {"crit_chance": 0.15},
-      "mult": {"damage": 1.15, "spread": 0.35, "range": 1.15},
-      "visual": {"length": 34, "width": 6, "count": 1}
+      "add": {
+        "crit_chance": 0.15
+      },
+      "mult": {
+        "damage": 1.15,
+        "spread": 0.35,
+        "range": 1.15
+      },
+      "visual": {
+        "length": 34,
+        "width": 6,
+        "count": 1
+      }
+    },
+    "compensator_barrel": {
+      "name": "Compensator",
+      "rarity": "UNCOMMON",
+      "price": 150,
+      "description": "Tames recoil: -30% spread, +5% fire rate.",
+      "mult": {
+        "spread": 0.7,
+        "fire_rate": 1.05
+      },
+      "visual": {
+        "length": 20,
+        "width": 8,
+        "count": 1
+      }
+    },
+    "sawed_off_barrel": {
+      "name": "Sawed-Off",
+      "rarity": "UNCOMMON",
+      "price": 160,
+      "description": "+25% damage, much wider spread, -40% range.",
+      "mult": {
+        "damage": 1.25,
+        "spread": 1.6,
+        "range": 0.6
+      },
+      "visual": {
+        "length": 8,
+        "width": 9,
+        "count": 2
+      }
+    },
+    "sniper_barrel": {
+      "name": "Sniper Barrel",
+      "rarity": "RARE",
+      "price": 340,
+      "description": "+60% range, +50% bullet speed, +20% dmg. -20% fire rate.",
+      "mult": {
+        "range": 1.6,
+        "bullet_speed": 1.5,
+        "damage": 1.2,
+        "fire_rate": 0.8,
+        "spread": 0.5
+      },
+      "visual": {
+        "length": 52,
+        "width": 5,
+        "count": 1
+      }
+    },
+    "triple_barrel": {
+      "name": "Triple Barrel",
+      "rarity": "EPIC",
+      "price": 560,
+      "description": "+2 projectiles per shot. -30% damage.",
+      "add": {
+        "bullet_count": 2
+      },
+      "mult": {
+        "damage": 0.7,
+        "spread": 1.4
+      },
+      "visual": {
+        "length": 22,
+        "width": 5,
+        "count": 3
+      }
     }
   },
   "magazine": {
     "small_magazine": {
-      "name": "Small Magazine", "rarity": "COMMON", "price": 0,
+      "name": "Small Magazine",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "Standard capacity.",
-      "visual": {"shape": "rect", "w": 8, "h": 12}
+      "visual": {
+        "shape": "rect",
+        "w": 8,
+        "h": 12
+      }
     },
     "extended_magazine": {
-      "name": "Extended Magazine", "rarity": "COMMON", "price": 100,
+      "name": "Extended Magazine",
+      "rarity": "COMMON",
+      "price": 100,
       "description": "+50% capacity, +10% reload time.",
-      "mult": {"magazine_size": 1.5, "reload_time": 1.1},
-      "visual": {"shape": "rect", "w": 8, "h": 20}
+      "mult": {
+        "magazine_size": 1.5,
+        "reload_time": 1.1
+      },
+      "visual": {
+        "shape": "rect",
+        "w": 8,
+        "h": 20
+      }
     },
     "quick_magazine": {
-      "name": "Quick Magazine", "rarity": "UNCOMMON", "price": 180,
+      "name": "Quick Magazine",
+      "rarity": "UNCOMMON",
+      "price": 180,
       "description": "Reload twice as fast. -15% capacity.",
-      "mult": {"magazine_size": 0.85, "reload_time": 0.5},
-      "visual": {"shape": "rect", "w": 10, "h": 10}
+      "mult": {
+        "magazine_size": 0.85,
+        "reload_time": 0.5
+      },
+      "visual": {
+        "shape": "rect",
+        "w": 10,
+        "h": 10
+      }
     },
     "drum_magazine": {
-      "name": "Drum Magazine", "rarity": "UNCOMMON", "price": 200,
+      "name": "Drum Magazine",
+      "rarity": "UNCOMMON",
+      "price": 200,
       "description": "+150% capacity. Slow reload, slightly heavier.",
-      "mult": {"magazine_size": 2.5, "reload_time": 1.5, "move_speed_mult": 0.95},
-      "visual": {"shape": "drum", "w": 18, "h": 18}
+      "mult": {
+        "magazine_size": 2.5,
+        "reload_time": 1.5,
+        "move_speed_mult": 0.95
+      },
+      "visual": {
+        "shape": "drum",
+        "w": 18,
+        "h": 18
+      }
     },
     "belt_feed": {
-      "name": "Belt Feed", "rarity": "EPIC", "price": 520,
+      "name": "Belt Feed",
+      "rarity": "EPIC",
+      "price": 520,
       "description": "x4 capacity and +10% fire rate. Very slow reload.",
-      "mult": {"magazine_size": 4.0, "reload_time": 2.0, "fire_rate": 1.1},
-      "visual": {"shape": "box", "w": 20, "h": 16}
+      "mult": {
+        "magazine_size": 4.0,
+        "reload_time": 2.0,
+        "fire_rate": 1.1
+      },
+      "visual": {
+        "shape": "box",
+        "w": 20,
+        "h": 16
+      }
+    },
+    "twin_magazine": {
+      "name": "Twin Magazine",
+      "rarity": "RARE",
+      "price": 320,
+      "description": "Taped mags: +80% capacity, -20% reload time.",
+      "mult": {
+        "magazine_size": 1.8,
+        "reload_time": 0.8
+      },
+      "visual": {
+        "shape": "rect",
+        "w": 14,
+        "h": 18
+      }
+    },
+    "hyper_magazine": {
+      "name": "Hyper Magazine",
+      "rarity": "LEGENDARY",
+      "price": 880,
+      "description": "Quantum feed: x3 capacity, -40% reload time.",
+      "mult": {
+        "magazine_size": 3.0,
+        "reload_time": 0.6
+      },
+      "visual": {
+        "shape": "box",
+        "w": 18,
+        "h": 14
+      }
     }
   },
   "trigger": {
     "single_trigger": {
-      "name": "Single", "rarity": "COMMON", "price": 0,
+      "name": "Single",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "Semi-auto: one shot per click. +15% damage.",
-      "mult": {"damage": 1.15},
-      "props": {"fire_mode": "single"},
-      "visual": {"color": [200, 200, 210]}
+      "mult": {
+        "damage": 1.15
+      },
+      "props": {
+        "fire_mode": "single"
+      },
+      "visual": {
+        "color": [
+          200,
+          200,
+          210
+        ]
+      }
     },
     "auto_trigger": {
-      "name": "Auto", "rarity": "COMMON", "price": 0,
+      "name": "Auto",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "Hold to fire continuously.",
-      "props": {"fire_mode": "auto"},
-      "visual": {"color": [120, 220, 140]}
+      "props": {
+        "fire_mode": "auto"
+      },
+      "visual": {
+        "color": [
+          120,
+          220,
+          140
+        ]
+      }
     },
     "burst_trigger": {
-      "name": "Burst", "rarity": "UNCOMMON", "price": 150,
+      "name": "Burst",
+      "rarity": "UNCOMMON",
+      "price": 150,
       "description": "Fires a 3-round burst per click. +30% effective fire rate.",
-      "mult": {"fire_rate": 1.3},
-      "props": {"fire_mode": "burst", "burst_count": 3},
-      "visual": {"color": [120, 180, 255]}
+      "mult": {
+        "fire_rate": 1.3
+      },
+      "props": {
+        "fire_mode": "burst",
+        "burst_count": 3
+      },
+      "visual": {
+        "color": [
+          120,
+          180,
+          255
+        ]
+      }
     },
     "rapid_trigger": {
-      "name": "Rapid", "rarity": "RARE", "price": 300,
+      "name": "Rapid",
+      "rarity": "RARE",
+      "price": 300,
       "description": "Full auto at +50% fire rate. -15% damage, more spread.",
-      "mult": {"fire_rate": 1.5, "damage": 0.85, "spread": 1.4},
-      "props": {"fire_mode": "auto"},
-      "visual": {"color": [255, 150, 80]}
+      "mult": {
+        "fire_rate": 1.5,
+        "damage": 0.85,
+        "spread": 1.4
+      },
+      "props": {
+        "fire_mode": "auto"
+      },
+      "visual": {
+        "color": [
+          255,
+          150,
+          80
+        ]
+      }
     },
     "charge_trigger": {
-      "name": "Charge", "rarity": "RARE", "price": 300,
+      "name": "Charge",
+      "rarity": "RARE",
+      "price": 300,
       "description": "Hold to charge, release to fire. Up to x3 damage and +pierce.",
-      "props": {"fire_mode": "charge", "charge_time": 0.8},
-      "visual": {"color": [200, 120, 255]}
+      "props": {
+        "fire_mode": "charge",
+        "charge_time": 0.8
+      },
+      "visual": {
+        "color": [
+          200,
+          120,
+          255
+        ]
+      }
+    },
+    "hair_trigger": {
+      "name": "Hair",
+      "rarity": "UNCOMMON",
+      "price": 160,
+      "description": "Full auto, +25% fire rate, -10% damage.",
+      "mult": {
+        "fire_rate": 1.25,
+        "damage": 0.9
+      },
+      "props": {
+        "fire_mode": "auto"
+      },
+      "visual": {
+        "color": [
+          255,
+          230,
+          120
+        ]
+      }
+    },
+    "double_tap_trigger": {
+      "name": "Double Tap",
+      "rarity": "RARE",
+      "price": 280,
+      "description": "2-round burst per click, +10% damage.",
+      "mult": {
+        "damage": 1.1,
+        "fire_rate": 1.15
+      },
+      "props": {
+        "fire_mode": "burst",
+        "burst_count": 2
+      },
+      "visual": {
+        "color": [
+          100,
+          255,
+          220
+        ]
+      }
+    },
+    "overdrive_trigger": {
+      "name": "Overdrive",
+      "rarity": "EPIC",
+      "price": 520,
+      "description": "Full auto at double fire rate. -30% dmg, big spread.",
+      "mult": {
+        "fire_rate": 2.0,
+        "damage": 0.7,
+        "spread": 1.6
+      },
+      "props": {
+        "fire_mode": "auto"
+      },
+      "visual": {
+        "color": [
+          255,
+          60,
+          60
+        ]
+      }
     }
   },
   "ammo": {
     "normal_ammo": {
-      "name": "Normal", "rarity": "COMMON", "price": 0,
+      "name": "Normal",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "Plain lead.",
-      "props": {"ammo_type": "normal"},
-      "visual": {"color": [255, 230, 120]}
+      "props": {
+        "ammo_type": "normal"
+      },
+      "visual": {
+        "color": [
+          255,
+          230,
+          120
+        ]
+      }
     },
     "ap_ammo": {
-      "name": "Armor Piercing", "rarity": "UNCOMMON", "price": 200,
+      "name": "Armor Piercing",
+      "rarity": "UNCOMMON",
+      "price": 200,
       "description": "Pierces +2 enemies and ignores armor. Faster bullets.",
-      "add": {"pierce": 2},
-      "mult": {"bullet_speed": 1.15},
-      "props": {"ammo_type": "armor_piercing"},
-      "visual": {"color": [180, 240, 255]}
+      "add": {
+        "pierce": 2
+      },
+      "mult": {
+        "bullet_speed": 1.15
+      },
+      "props": {
+        "ammo_type": "armor_piercing"
+      },
+      "visual": {
+        "color": [
+          180,
+          240,
+          255
+        ]
+      }
     },
     "explosive_ammo": {
-      "name": "Explosive", "rarity": "RARE", "price": 350,
+      "name": "Explosive",
+      "rarity": "RARE",
+      "price": 350,
       "description": "Bullets explode on impact. -15% fire rate.",
-      "add": {"explosion_radius": 70},
-      "mult": {"fire_rate": 0.85},
-      "props": {"ammo_type": "explosive"},
-      "visual": {"color": [255, 120, 60]}
+      "add": {
+        "explosion_radius": 70
+      },
+      "mult": {
+        "fire_rate": 0.85
+      },
+      "props": {
+        "ammo_type": "explosive"
+      },
+      "visual": {
+        "color": [
+          255,
+          120,
+          60
+        ]
+      }
     },
     "incendiary_ammo": {
-      "name": "Incendiary", "rarity": "UNCOMMON", "price": 220,
+      "name": "Incendiary",
+      "rarity": "UNCOMMON",
+      "price": 220,
       "description": "Sets enemies ablaze: burns for 105% of hit damage over 3s.",
-      "add": {"burn": 0.35},
-      "props": {"ammo_type": "incendiary"},
-      "visual": {"color": [255, 170, 40]}
+      "add": {
+        "burn": 0.35
+      },
+      "props": {
+        "ammo_type": "incendiary"
+      },
+      "visual": {
+        "color": [
+          255,
+          170,
+          40
+        ]
+      }
     },
     "split_ammo": {
-      "name": "Split", "rarity": "RARE", "price": 320,
+      "name": "Split",
+      "rarity": "RARE",
+      "price": 320,
       "description": "Bullets shatter into 3 fragments on hit.",
-      "add": {"split": 3},
-      "props": {"ammo_type": "split"},
-      "visual": {"color": [140, 255, 160]}
+      "add": {
+        "split": 3
+      },
+      "props": {
+        "ammo_type": "split"
+      },
+      "visual": {
+        "color": [
+          140,
+          255,
+          160
+        ]
+      }
     },
     "ricochet_ammo": {
-      "name": "Ricochet", "rarity": "UNCOMMON", "price": 220,
+      "name": "Ricochet",
+      "rarity": "UNCOMMON",
+      "price": 220,
       "description": "Bounces off walls twice and seeks a new target after hits.",
-      "add": {"ricochet": 2},
-      "props": {"ammo_type": "ricochet"},
-      "visual": {"color": [255, 120, 220]}
+      "add": {
+        "ricochet": 2
+      },
+      "props": {
+        "ammo_type": "ricochet"
+      },
+      "visual": {
+        "color": [
+          255,
+          120,
+          220
+        ]
+      }
+    },
+    "hollow_point_ammo": {
+      "name": "Hollow Point",
+      "rarity": "UNCOMMON",
+      "price": 190,
+      "description": "+25% damage, +40% knockback.",
+      "mult": {
+        "damage": 1.25,
+        "knockback": 1.4
+      },
+      "props": {
+        "ammo_type": "normal"
+      },
+      "visual": {
+        "color": [
+          255,
+          200,
+          160
+        ]
+      }
+    },
+    "frost_ammo": {
+      "name": "Frost",
+      "rarity": "RARE",
+      "price": 330,
+      "description": "Hits slow enemies by 45% for 2s.",
+      "add": {
+        "slow": 0.45
+      },
+      "props": {
+        "ammo_type": "frost"
+      },
+      "visual": {
+        "color": [
+          150,
+          220,
+          255
+        ]
+      }
+    },
+    "homing_ammo": {
+      "name": "Homing",
+      "rarity": "EPIC",
+      "price": 540,
+      "description": "Bullets curve toward the nearest enemy.",
+      "add": {
+        "homing": 4.0
+      },
+      "mult": {
+        "bullet_speed": 0.85
+      },
+      "props": {
+        "ammo_type": "homing"
+      },
+      "visual": {
+        "color": [
+          220,
+          255,
+          120
+        ]
+      }
+    },
+    "plasma_ammo": {
+      "name": "Plasma",
+      "rarity": "LEGENDARY",
+      "price": 900,
+      "description": "Small explosions, burning, +1 pierce.",
+      "add": {
+        "explosion_radius": 45,
+        "burn": 0.2,
+        "pierce": 1
+      },
+      "props": {
+        "ammo_type": "explosive"
+      },
+      "visual": {
+        "color": [
+          200,
+          120,
+          255
+        ]
+      }
     }
   },
   "modifier": {
     "no_modifier": {
-      "name": "None", "rarity": "COMMON", "price": 0,
+      "name": "None",
+      "rarity": "COMMON",
+      "price": 0,
       "description": "No modifier installed.",
-      "visual": {"color": [70, 74, 86]}
+      "visual": {
+        "color": [
+          70,
+          74,
+          86
+        ]
+      }
     },
     "critical_mod": {
-      "name": "Critical", "rarity": "UNCOMMON", "price": 180,
+      "name": "Critical",
+      "rarity": "UNCOMMON",
+      "price": 180,
       "description": "+15% crit chance, +50% crit damage.",
-      "add": {"crit_chance": 0.15, "crit_damage": 0.5},
-      "visual": {"color": [255, 220, 60]}
+      "add": {
+        "crit_chance": 0.15,
+        "crit_damage": 0.5
+      },
+      "visual": {
+        "color": [
+          255,
+          220,
+          60
+        ]
+      }
     },
     "heavy_mod": {
-      "name": "Heavy", "rarity": "UNCOMMON", "price": 180,
+      "name": "Heavy",
+      "rarity": "UNCOMMON",
+      "price": 180,
       "description": "+25% damage, +60% knockback. -12% fire rate.",
-      "mult": {"damage": 1.25, "knockback": 1.6, "fire_rate": 0.88},
-      "visual": {"color": [160, 120, 90]}
+      "mult": {
+        "damage": 1.25,
+        "knockback": 1.6,
+        "fire_rate": 0.88
+      },
+      "visual": {
+        "color": [
+          160,
+          120,
+          90
+        ]
+      }
     },
     "fast_mod": {
-      "name": "Fast", "rarity": "UNCOMMON", "price": 180,
+      "name": "Fast",
+      "rarity": "UNCOMMON",
+      "price": 180,
       "description": "+40% bullet speed, +15% fire rate. -8% damage.",
-      "mult": {"bullet_speed": 1.4, "fire_rate": 1.15, "damage": 0.92},
-      "visual": {"color": [120, 255, 255]}
+      "mult": {
+        "bullet_speed": 1.4,
+        "fire_rate": 1.15,
+        "damage": 0.92
+      },
+      "visual": {
+        "color": [
+          120,
+          255,
+          255
+        ]
+      }
     },
     "vampiric_mod": {
-      "name": "Vampiric", "rarity": "RARE", "price": 300,
+      "name": "Vampiric",
+      "rarity": "RARE",
+      "price": 300,
       "description": "Heal for 4% of damage dealt.",
-      "add": {"lifesteal": 0.04},
-      "visual": {"color": [200, 30, 60]}
+      "add": {
+        "lifesteal": 0.04
+      },
+      "visual": {
+        "color": [
+          200,
+          30,
+          60
+        ]
+      }
     },
     "lucky_mod": {
-      "name": "Lucky", "rarity": "RARE", "price": 280,
+      "name": "Lucky",
+      "rarity": "RARE",
+      "price": 280,
       "description": "+50% luck: more drops, more money.",
-      "add": {"luck": 0.5},
-      "visual": {"color": [90, 230, 90]}
+      "add": {
+        "luck": 0.5
+      },
+      "visual": {
+        "color": [
+          90,
+          230,
+          90
+        ]
+      }
     },
     "chain_mod": {
-      "name": "Chain", "rarity": "EPIC", "price": 460,
+      "name": "Chain",
+      "rarity": "EPIC",
+      "price": 460,
       "description": "Hits arc lightning to 2 nearby enemies for 50% damage.",
-      "add": {"chain": 2},
-      "visual": {"color": [140, 170, 255]}
+      "add": {
+        "chain": 2
+      },
+      "visual": {
+        "color": [
+          140,
+          170,
+          255
+        ]
+      }
+    },
+    "scope_mod": {
+      "name": "Scope",
+      "rarity": "UNCOMMON",
+      "price": 170,
+      "description": "+10% crit chance, +20% range, -20% spread.",
+      "add": {
+        "crit_chance": 0.1
+      },
+      "mult": {
+        "range": 1.2,
+        "spread": 0.8
+      },
+      "visual": {
+        "color": [
+          200,
+          200,
+          255
+        ]
+      }
+    },
+    "berserk_mod": {
+      "name": "Berserk",
+      "rarity": "RARE",
+      "price": 320,
+      "description": "+40% damage, -10% move speed.",
+      "mult": {
+        "damage": 1.4,
+        "move_speed_mult": 0.9
+      },
+      "visual": {
+        "color": [
+          255,
+          60,
+          40
+        ]
+      }
+    },
+    "overcharged_mod": {
+      "name": "Overcharged",
+      "rarity": "EPIC",
+      "price": 480,
+      "description": "+30% fire rate, -20% reload time.",
+      "mult": {
+        "fire_rate": 1.3,
+        "reload_time": 0.8
+      },
+      "visual": {
+        "color": [
+          255,
+          255,
+          120
+        ]
+      }
+    },
+    "executioner_mod": {
+      "name": "Executioner",
+      "rarity": "LEGENDARY",
+      "price": 900,
+      "description": "+25% crit chance, +100% crit damage.",
+      "add": {
+        "crit_chance": 0.25,
+        "crit_damage": 1.0
+      },
+      "visual": {
+        "color": [
+          40,
+          0,
+          0
+        ]
+      }
     }
   }
 }
