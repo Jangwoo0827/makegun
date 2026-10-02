@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import settings
 from entities.player_stats import PlayerStats
+from weapons.synergy import active_synergies
 from weapons.weapon_parts import PART_ORDER, PartCategory, WeaponPart
 
 # Default value of every numeric stat before the receiver's base is applied.
@@ -50,6 +51,7 @@ class WeaponStats:
     burst_count: int
     charge_time: float
     ammo_type: str
+    synergies: tuple[str, ...] = ()
 
     @property
     def dps(self) -> float:
@@ -112,6 +114,12 @@ class Weapon:
         for category in PART_ORDER:
             for key, v in self.parts[category].mult.items():
                 values[key] = values.get(key, 0.0) * v
+        synergies = active_synergies(p.part_id for p in self.parts.values())
+        for syn in synergies:
+            for key, v in syn.add.items():
+                values[key] = values.get(key, 0.0) + v
+            for key, v in syn.mult.items():
+                values[key] = values.get(key, 0.0) * v
 
         values["damage"] *= 1.0 + (self.level - 1) * settings.WEAPON_UPGRADE_DAMAGE_PER_LEVEL
         crit_base = 0.0
@@ -173,6 +181,7 @@ class Weapon:
             burst_count=max(1, int(props["burst_count"])),  # type: ignore[arg-type]
             charge_time=float(props["charge_time"]),  # type: ignore[arg-type]
             ammo_type=str(props["ammo_type"]),
+            synergies=tuple(syn.name for syn in synergies),
         )
 
     def refresh(self, player: PlayerStats | None) -> None:

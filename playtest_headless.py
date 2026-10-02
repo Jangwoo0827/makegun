@@ -13,6 +13,10 @@ g = Game(headless=True)
 import tempfile
 g.saves.path = os.path.join(tempfile.gettempdir(), "gun_designer_test_save.json")
 g.saves.delete()
+from game.profile import Profile
+_prof = os.path.join(tempfile.gettempdir(), "gun_designer_test_profile.json")
+if os.path.exists(_prof): os.remove(_prof)
+g.profile = Profile(_prof)  # never touch the real profile.json
 g.change(StateID.MAIN_MENU)
 DT = 1 / 60
 mouse = {"pos": (640, 360), "down": False}
@@ -50,7 +54,11 @@ for sid in (StateID.LOADOUT, StateID.SETTINGS):
 g.push(StateID.LOADOUT); click(g.top.buttons.buttons[3]); key(pygame.K_ESCAPE)
 assert g.options.starter_index == 3
 g.options.starter_index = 0
-# 3. start the run via PLAY button
+# 3. start the run via PLAY -> stage select -> stage 1
+click(g.top.buttons.buttons[0])
+assert g.top.state_id == StateID.STAGE_SELECT, g.top
+assert not g.top.buttons.buttons[1].enabled, "stage 2 must start locked"
+step(2)
 click(g.top.buttons.buttons[0])
 assert g.top.state_id == StateID.GAME, g.top
 ps = g.play_state; sess = g.session
@@ -175,10 +183,17 @@ click(g.top.buttons.buttons[1])
 assert g.top.state_id == StateID.MAIN_MENU and g.session is None
 assert not g.saves.has_save(), "game over must delete the save"
 
-# --- bosses: Broodmother at wave 20 spawns, fights and dies
+assert g.profile.stat("runs") == 1 and g.profile.cores > 0, (g.profile.stats, g.profile.cores)
+print("profile after death:", g.profile.cores, "cores,", sorted(g.profile.achievements))
+
+# --- bosses: all four + new enemies spawn, fight and die (stage 5 difficulty)
 from systems.wave_manager import build_wave
 assert "broodmother" in build_wave(20) and "boss" in build_wave(10)
-g.start_new_run(); ps = g.play_state; sess = g.session
+assert build_wave(25, g.stages[4]).count("warden") == 1 and "boss" in build_wave(25, g.stages[4])
+g.start_new_run(4); ps = g.play_state; sess = g.session
+assert sess.stage.stage_id == "core" and len(ps.world.walls) == 4 + len(g.stages[4].obstacles)
+for et in ["titan", "warden"]:
+    e = ps.spawner.spawn_now(et, sess.player.pos); ps._add_enemy(e)
 from entities.enemy_types import create_enemy
 for et in ["broodmother", "splitter", "bomber", "sniper", "healer", "charger", "summoner", "mini"]:
     e = ps.spawner.spawn_now(et, sess.player.pos); ps._add_enemy(e)
@@ -191,5 +206,89 @@ print("alive after 20s:", sorted(types), "enemy bullets:", len(ps.world.enemy_bu
 for e in ps.world.enemies: e.take_damage(1e9, True)
 step(3)
 print("kills:", sess.kills)
+assert sess.boss_kills >= 3, sess.boss_kills
 g.end_run()
+
+# --- affixes
+from systems.affixes import AFFIXES, apply_affix, affix_death_actions
+g.start_new_run(0); ps = g.play_state; sess = g.session
+for aff in AFFIXES:
+    e = ps.spawner.spawn_now("normal", sess.player.pos); apply_affix(e, aff); ps._add_enemy(e)
+sh = [e for e in ps.world.enemies if e.affix == "shielded"][0]
+hp0 = sh.hp; sh.take_damage(5, True); assert sh.hp == hp0 and sh.shield < sh.shield_max, "shield absorbs"
+assert affix_death_actions([e for e in ps.world.enemies if e.affix == "volatile"][0]).explosions
+assert affix_death_actions([e for e in ps.world.enemies if e.affix == "splitting"][0]).summons == ["mini", "mini"]
+step(30)
+for e in ps.world.enemies: e.take_damage(1e9, True)
+step(3)
+assert g.profile.stat("total_affix_kills") >= 6
+print("affixes ok")
+
+# --- skills: dash (invulnerable) + grenade (kills)
+p = sess.player
+keys.clear(); keys.add(pygame.K_d)
+x0 = p.pos.x; key(pygame.K_SPACE); assert p.dash_time > 0 and not p.take_damage(10), "dash = invulnerable"
+step(15); assert p.pos.x - x0 > 60 and p.dash_cooldown > 0, (p.pos.x - x0)
+keys.clear()
+for i in range(6):
+    e = ps.spawner.spawn_now("normal", p.pos); e.pos = p.pos + pygame.Vector2(200 + i * 4, 0); ps._add_enemy(e)
+mouse["pos"] = (int(p.pos.x - ps.camera.offset.x + 200), int(p.pos.y - ps.camera.offset.y))
+key(pygame.K_q); assert ps.grenades and p.grenade_cooldown > 0
+step(60)
+assert sess.run_stats.get("best_grenade_kills", 0) >= 5, sess.run_stats
+print("skills ok, grenade dmg", int(ps.grenade_damage()))
+
+# --- synergy + presets in editor
+from weapons.weapon_parts import PartCategory as C
+for pid in ("shotgun_receiver", "split_ammo", "frost_ammo", "chain_mod"):
+    sess.owned_parts.add(pid)
+w = sess.player.weapon
+w.set_part(lib.get("shotgun_receiver")); w.set_part(lib.get("split_ammo"))
+sess.player.refresh_weapons()
+assert "SCATTERSHOT" in w.stats.synergies
+ps._track_run_stats(); assert "synergist" in g.profile.achievements
+g.push(StateID.WEAPON_EDITOR); ed = g.top
+pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=3, pos=ed.preset_buttons[0].rect.center)); step()
+assert g.profile.preset(0)["parts"]["receiver"] == "shotgun_receiver"
+ed = g.top
+ed._equip(lib.get("pistol_receiver")); assert ed.draft.part(C.RECEIVER).part_id == "pistol_receiver"
+click(ed.preset_buttons[0]); assert g.top.draft.part(C.RECEIVER).part_id == "shotgun_receiver"
+assert g.top._synergies_gained(lib.get("chain_mod")) == [] and sess.owned_parts
+g.top.draft.parts[C.AMMO] = lib.get("frost_ammo")
+assert "CRYO CHAIN" in g.top._synergies_gained(lib.get("chain_mod"))
+step(2); key(pygame.K_ESCAPE)
+print("synergy + presets ok")
+
+# --- stage clear: finish stage 1 -> stage 2 unlocked, cores, victory screen
+g.pop_to(StateID.GAME)
+ps.waves.wave = sess.stage.waves - 1; ps.world.enemies.clear()
+ps._start_wave()
+assert ps.waves.is_final_wave
+ps.spawner.queue.clear(); ps.waves.phase = ps.waves.phase.ACTIVE
+step(5)
+assert g.top.state_id == StateID.STAGE_CLEAR, g.top
+assert g.profile.unlocked_stage >= 1 and g.profile.stat("stages_cleared") >= 1 and "stage_1" in g.profile.achievements
+assert not g.saves.has_save(), "stage clear ends the run"
+cores_before = g.profile.cores
+click(g.top.buttons.buttons[0])  # NEXT stage
+assert g.top.state_id == StateID.GAME and g.session.stage.stage_id == "foundry"
+print("stage clear ok")
+
+# --- meta upgrades apply to the next run
+g.end_run()
+g.profile.cores = 1000
+g.push(StateID.META); m = g.top
+for _ in range(3): click(m.buttons.buttons[0]); m = g.top   # VITALITY x3
+assert g.profile.meta_level("vitality") == 3
+key(pygame.K_ESCAPE)
+g.start_new_run(0)
+assert g.session.stats.max_hp == 100 + 36 and g.session.player.hp == 136, g.session.stats.max_hp
+g.end_run()
+print("meta ok")
+
+# --- every screen renders
+for sid in (StateID.STAGE_SELECT, StateID.META, StateID.STATS):
+    g.push(sid); step(3); g.pop()
+g.profile.save()
+assert os.path.exists(_prof)
 print("ALL OK")

@@ -15,6 +15,8 @@ from ui.scroll_row import ScrollRow
 from weapons.gun_renderer import draw_gun
 from weapons.weapon import Weapon, WeaponStats
 from weapons.weapon_builder import BLUEPRINTS, WeaponPreset
+from game.profile import PRESET_SLOTS
+from weapons.synergy import active_synergies
 from weapons.weapon_parts import PART_ORDER, PartCategory, WeaponPart
 
 if TYPE_CHECKING:
@@ -100,6 +102,16 @@ class WeaponEditorState(GameState):
             ok = all(pid in s.owned_parts for pid in bp.part_ids.values())
             self.buttons.add(Button((20 + i * 162, 372, 154, 34), bp.name, lambda b=bp: self._load_blueprint(b),
                                     font_size=14, enabled=ok, accent=settings.RARITY_COLORS["EPIC"]))
+        # Presets (persist across runs): left-click load, right-click save
+        self.preset_buttons: list[Button] = []
+        for i in range(PRESET_SLOTS):
+            preset = self.game.profile.preset(i)
+            label = preset["name"][:12] if preset else f"EMPTY {i + 1}"
+            btn = Button((PARTS_X + i * 82, H - 54, 76, 44), label, lambda i=i: self._load_preset(i), font_size=11,
+                         accent=settings.RARITY_COLORS["RARE"], enabled=True, selected=False,
+                         subtext=f"P{i + 1}")
+            self.buttons.add(btn)
+            self.preset_buttons.append(btn)
         # Footer
         self.buttons.add(Button((W - 420, H - 54, 200, 44), "SAVE WEAPON", self._save, accent=settings.UI_GOOD,
                                 hotkey=pygame.K_RETURN, enabled=self.dirty))
@@ -152,6 +164,36 @@ class WeaponEditorState(GameState):
         if not stay:
             self._build()
 
+    def _save_preset(self, slot: int) -> None:
+        name = self.session.builder.auto_name(self.draft)
+        self.game.profile.save_preset(slot, name, {c.value: p.part_id for c, p in self.draft.parts.items()})
+        self._notify(f"Preset P{slot + 1} saved: {name}")
+        self.game.sound.play("buy")
+        self._build()
+
+    def _load_preset(self, slot: int) -> None:
+        preset = self.game.profile.preset(slot)
+        if preset is None:
+            self._notify(f"P{slot + 1} is empty - right-click to save the current gun there")
+            return
+        lib = self.session.library
+        missing: list[str] = []
+        for cat_value, pid in preset["parts"].items():
+            if pid not in lib.parts:
+                continue
+            part = lib.get(pid)
+            if pid in self.session.owned_parts:
+                self.draft.parts[part.category] = part
+            else:
+                missing.append(part.name)
+        self.draft.refresh(self.session.player.effective_stats)
+        self.dirty = True
+        msg = f"Loaded {preset['name']}"
+        if missing:
+            msg += f" (not owned yet: {', '.join(missing)})"
+        self._notify(msg)
+        self._build()
+
     def _back(self) -> None:
         self.game.pop()
 
@@ -159,6 +201,11 @@ class WeaponEditorState(GameState):
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.MOUSEMOTION:
             self._update_hover(event.pos)
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            for i, btn in enumerate(self.preset_buttons):
+                if btn.rect.collidepoint(event.pos):
+                    self._save_preset(i)
+                    return
         for row in list(self.rows.values()):
             if row.handle_event(event):
                 return
@@ -186,6 +233,14 @@ class WeaponEditorState(GameState):
         trial = self.session.builder.clone(self.draft)
         trial.parts[self.hover_part.category] = self.hover_part
         return trial.compute_stats(self.session.player.effective_stats)
+
+    def _synergies_gained(self, part: WeaponPart) -> list[str]:
+        """Synergies that equipping `part` would newly activate."""
+        before = {s.name for s in active_synergies(p.part_id for p in self.draft.parts.values())}
+        trial = dict(self.draft.parts)
+        trial[part.category] = part
+        after = {s.name for s in active_synergies(p.part_id for p in trial.values())}
+        return sorted(after - before)
 
     def draw(self, surface: pygame.Surface) -> None:
         draw_backdrop(surface, 0.0)
@@ -227,7 +282,10 @@ class WeaponEditorState(GameState):
         effects = [f"MODE {mode}", f"AMMO {cur.ammo_type.replace('_', ' ').upper()}"]
         if cur.move_speed_mult < 0.999:
             effects.append(f"MOVE {cur.move_speed_mult:.0%}")
-        draw_text(surface, "   ".join(effects), (st.x + 14, st.y + 214), 14, settings.UI_TEXT)
+        draw_text(surface, "   ".join(effects), (st.x + 14, st.y + 219), 14, settings.UI_TEXT)
+        if cur.synergies:
+            draw_text(surface, "SYNERGY: " + ", ".join(cur.synergies), (st.x + 14, st.y + 200), 13,
+                      (255, 170, 255), True)
         info = self.hover_part
         if info is not None:
             color = settings.RARITY_COLORS[info.rarity.value]
@@ -235,8 +293,12 @@ class WeaponEditorState(GameState):
             ASSETS.blit_part_icon(surface, info.part_id, (st.right - 60, st.y + 226))
             desc = info.description if info.part_id in self.session.owned_parts else \
                 "Locked - find it as a drop or buy it in the shop."
+            gained = self._synergies_gained(info)
+            if gained:
+                desc = f"Activates {', '.join(gained)}!  " + desc
             for j, line in enumerate(wrap_text(desc, 13, st.w - 28)[:2]):
-                draw_text(surface, line, (st.x + 14, st.y + 260 + j * 16), 13, settings.UI_TEXT_DIM)
+                draw_text(surface, line, (st.x + 14, st.y + 260 + j * 16), 13,
+                          (255, 170, 255) if gained and j == 0 else settings.UI_TEXT_DIM)
 
         # Part rows
         for row, category in enumerate(PART_ORDER):
@@ -249,6 +311,9 @@ class WeaponEditorState(GameState):
         for row in self.rows.values():
             row.draw(surface)
         if self.message_time > 0:
-            draw_text(surface, self.message, (PARTS_X, H - 40), 16, settings.UI_GOOD, True)
+            draw_text(surface, self.message, (PARTS_X, H - 80), 15, settings.UI_GOOD, True)
         elif self.dirty:
-            draw_text(surface, "Unsaved changes - BACK discards them", (PARTS_X, H - 40), 15, settings.UI_ACCENT)
+            draw_text(surface, "Unsaved changes - BACK discards them", (PARTS_X, H - 80), 15, settings.UI_ACCENT)
+        else:
+            draw_text(surface, "Presets: left-click load, right-click save", (PARTS_X, H - 80), 13,
+                      settings.UI_TEXT_DIM)

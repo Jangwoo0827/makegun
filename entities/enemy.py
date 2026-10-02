@@ -114,6 +114,13 @@ class Enemy:
         self.detour_time: float = 0.0
         #: set by the world each frame; ranged enemies approach when they can't see the player
         self.has_los: bool = True
+        # elite affix state (see systems/affixes.py)
+        self.affix: str | None = None
+        self.shield: float = 0.0
+        self.shield_max: float = 0.0
+        self.shield_delay: float = 0.0
+        #: incoming damage multiplier (e.g. a boss protected by drones)
+        self.damage_taken_mult: float = 1.0
 
     @property
     def is_boss(self) -> bool:
@@ -123,13 +130,19 @@ class Enemy:
     def take_damage(self, amount: float, ignore_armor: bool = False) -> float:
         if not self.alive:
             return 0.0
-        dealt = amount if ignore_armor else amount * (1.0 - self.armor)
+        dealt = (amount if ignore_armor else amount * (1.0 - self.armor)) * self.damage_taken_mult
+        total = dealt
+        if self.shield > 0:
+            absorbed = min(self.shield, dealt)
+            self.shield -= absorbed
+            dealt -= absorbed
+            self.shield_delay = 3.0
         self.hp -= dealt
         self.flash = 0.08
         if self.hp <= 0:
             self.hp = 0
             self.alive = False
-        return dealt
+        return total
 
     def apply_burn(self, dps: float, duration: float = 3.0) -> None:
         self.burn_dps = max(self.burn_dps, dps)
@@ -154,6 +167,10 @@ class Enemy:
         actions = EnemyActions()
         self.flash = max(0.0, self.flash - dt)
         self.contact_timer = max(0.0, self.contact_timer - dt)
+        if self.shield_max > 0:
+            self.shield_delay -= dt
+            if self.shield_delay <= 0:
+                self.shield = min(self.shield_max, self.shield + self.shield_max * 0.25 * dt)
         if self.slow_time > 0:
             self.slow_time -= dt
             if self.slow_time <= 0:

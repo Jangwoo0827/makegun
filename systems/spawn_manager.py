@@ -8,6 +8,7 @@ import pygame
 import settings
 from entities.enemy import Enemy, EnemyData, WaveScaling
 from entities.enemy_types import create_enemy
+from systems.affixes import roll_affix
 from systems.collision import resolve_walls
 
 MIN_SPAWN_DIST: float = 420.0
@@ -21,6 +22,8 @@ class SpawnManager:
         self.scaling: WaveScaling = WaveScaling()
         self.timer: float = 0.0
         self.interval: float = settings.SPAWN_INTERVAL
+        self.reward_mult: float = 1.0
+        self.affix_chance: float = 0.0
 
     def start(self, queue: list[str], scaling: WaveScaling, interval: float) -> None:
         self.queue = list(queue)
@@ -53,7 +56,11 @@ class SpawnManager:
             resolve_walls(pos, data.radius, self.walls)
         else:
             pos = self.random_spawn_point(player_pos, data.radius)
-        return create_enemy(enemy_type, self.enemy_db, pos, self.scaling)
+        enemy = create_enemy(enemy_type, self.enemy_db, pos, self.scaling)
+        enemy.reward = max(1, int(enemy.reward * self.reward_mult))
+        if near is None:  # summons never roll affixes
+            roll_affix(enemy, self.affix_chance)
+        return enemy
 
     def update(self, dt: float, player_pos: pygame.Vector2, alive_count: int) -> list[Enemy]:
         spawned: list[Enemy] = []

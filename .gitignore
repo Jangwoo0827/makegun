@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 settings_save.json
 save_run.json
+profile.json
+build/
+dist/
+*.spec

@@ -6,6 +6,7 @@ import pygame
 import settings
 from entities.player import Player
 from entities.player_stats import PlayerStats
+from game.stages import StageData
 from systems.upgrade_manager import Upgrade, UpgradeManager
 from weapons.weapon import Weapon
 from weapons.weapon_builder import STARTER_PRESETS, WeaponBuilder, WeaponPreset
@@ -14,8 +15,10 @@ from weapons.weapon_parts import PartCategory
 
 
 class RunSession:
-    def __init__(self, library: PartLibrary, upgrades: UpgradeManager, starter: WeaponPreset) -> None:
+    def __init__(self, library: PartLibrary, upgrades: UpgradeManager, starter: WeaponPreset,
+                 stage: StageData) -> None:
         self.library = library
+        self.stage: StageData = stage
         self.builder = WeaponBuilder(library)
         self.upgrade_manager = upgrades
         self.money: int = settings.STARTING_MONEY
@@ -33,6 +36,27 @@ class RunSession:
         self.last_wave_reward: int = 0
         #: number of waves already completed when the run was (re)started from a save
         self.resume_wave: int = 0
+        self.boss_kills: int = 0
+        #: per-run counters used by achievements (see data/achievements.json)
+        self.run_stats: dict[str, float] = {}
+        self.run_recorded: bool = False
+
+    def apply_meta(self, effects: dict[str, float], money: int, parts: int) -> None:
+        """Permanent profile bonuses applied at the start of a run."""
+        if effects:
+            self.stats.apply_effects(effects)
+        self.money += money
+        for _ in range(parts):
+            part = self.library.random_part(self.owned_parts, 3)
+            if part is not None:
+                self.owned_parts.add(part.part_id)
+        self.player.hp = self.stats.max_hp
+        self.player.refresh_weapons()
+
+    def bump(self, key: str, value: float) -> None:
+        """Track the max of a per-run stat."""
+        if value > self.run_stats.get(key, 0.0):
+            self.run_stats[key] = value
 
     @property
     def weapons(self) -> list[Weapon]:

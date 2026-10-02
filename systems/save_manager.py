@@ -15,13 +15,14 @@ from typing import Any
 import settings
 from entities.player_stats import PlayerStats
 from game.session import RunSession
+from game.stages import StageData
 from systems.upgrade_manager import UpgradeManager
 from weapons.weapon_builder import STARTER_PRESETS
 from weapons.weapon_data import PartLibrary
 from weapons.weapon_parts import PART_ORDER, PartCategory
 
 SAVE_VERSION: int = 1
-SAVE_PATH: str = os.path.join(settings.BASE_DIR, "save_run.json")
+SAVE_PATH: str = settings.RUN_SAVE_FILE
 
 
 class SaveManager:
@@ -55,6 +56,9 @@ class SaveManager:
         data: dict[str, Any] = {
             "version": SAVE_VERSION,
             "phase": phase,
+            "stage": session.stage.index,
+            "boss_kills": session.boss_kills,
+            "run_stats": session.run_stats,
             "resume_wave": resume_wave,
             "money": session.money,
             "money_earned": session.money_earned,
@@ -80,18 +84,22 @@ class SaveManager:
             return False
 
     # ------------------------------------------------------------------ load
-    def load(self, library: PartLibrary, upgrades: UpgradeManager) -> tuple[RunSession, str] | None:
+    def load(self, library: PartLibrary, upgrades: UpgradeManager,
+             stages: list[StageData]) -> tuple[RunSession, str] | None:
         data = self.peek()
         if data is None:
             return None
         try:
-            return self._build_session(data, library, upgrades), str(data.get("phase", "wave"))
+            return self._build_session(data, library, upgrades, stages), str(data.get("phase", "wave"))
         except (KeyError, TypeError, ValueError):
             return None
 
     def _build_session(self, data: dict[str, Any], library: PartLibrary,
-                       upgrades: UpgradeManager) -> RunSession:
-        session = RunSession(library, upgrades, STARTER_PRESETS[0])
+                       upgrades: UpgradeManager, stages: list[StageData]) -> RunSession:
+        stage = stages[max(0, min(int(data.get("stage", 0)), len(stages) - 1))]
+        session = RunSession(library, upgrades, STARTER_PRESETS[0], stage)
+        session.boss_kills = int(data.get("boss_kills", 0))
+        session.run_stats = {k: float(v) for k, v in data.get("run_stats", {}).items()}
         session.money = int(data["money"])
         session.money_earned = int(data.get("money_earned", 0))
         session.kills = int(data.get("kills", 0))

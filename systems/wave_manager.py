@@ -6,6 +6,7 @@ from enum import Enum, auto
 
 import settings
 from entities.enemy import WaveScaling
+from game.stages import StageData
 from systems.spawn_manager import SpawnManager
 
 
@@ -32,9 +33,24 @@ def boss_for_wave(wave: int) -> str:
     return "boss" if (wave // settings.BOSS_WAVE_INTERVAL) % 2 == 1 else "broodmother"
 
 
-def build_wave(wave: int) -> list[str]:
-    """Return the ordered list of enemy types for a wave."""
-    count = 6 + int(wave * 2.2)
+def stage_scaling(wave: int, stage: StageData | None) -> WaveScaling:
+    sc = wave_scaling(wave)
+    if stage is not None:
+        sc.hp *= stage.hp_mult
+        sc.damage *= stage.damage_mult
+    return sc
+
+
+def build_wave(wave: int, stage: StageData | None = None) -> list[str]:
+    """Return the ordered list of enemy types for a wave.
+
+    Later stages unlock enemy types earlier (pool_offset) and add a few extra enemies.
+    """
+    bosses = list(stage.bosses_for(wave)) if stage is not None else \
+        ([boss_for_wave(wave)] if is_boss_wave(wave) else [])
+    stage_index = stage.index if stage is not None else 0
+    count = 6 + int(wave * 2.2) + stage_index * 2
+    wave = wave + (stage.pool_offset if stage is not None else 0)  # pool/elite thresholds
     pool: list[tuple[str, float]] = [("normal", 10.0)]
     if wave >= 2:
         pool.append(("fast", 5.0 + wave * 0.3))
@@ -63,15 +79,17 @@ def build_wave(wave: int) -> list[str]:
             enemies.insert(random.randint(count // 3, count), "elite")
     elif wave == settings.ELITE_WAVE_INTERVAL:
         enemies.append("elite")  # first taste of an elite at wave 5
-    if is_boss_wave(wave):
+    if bosses:
         enemies = enemies[: count // 2]
-        enemies.insert(min(3, len(enemies)), boss_for_wave(wave))
+        for i, boss in enumerate(bosses):
+            enemies.insert(min(3 + i * 6, len(enemies)), boss)
     return enemies
 
 
 class WaveManager:
-    def __init__(self, spawner: SpawnManager) -> None:
+    def __init__(self, spawner: SpawnManager, stage: StageData | None = None) -> None:
         self.spawner = spawner
+        self.stage = stage
         self.wave: int = 0
         self.phase: WavePhase = WavePhase.CLEARED
         self.countdown: float = 0.0
@@ -80,17 +98,31 @@ class WaveManager:
 
     def start_next_wave(self) -> None:
         self.wave += 1
-        queue = build_wave(self.wave)
+        queue = build_wave(self.wave, self.stage)
         self.total = len(queue)
         self.killed = 0
         interval = max(0.18, settings.SPAWN_INTERVAL - self.wave * 0.012)
-        self.spawner.start(queue, wave_scaling(self.wave), interval)
+        self.spawner.start(queue, stage_scaling(self.wave, self.stage), interval)
+        if self.stage is not None:
+            self.spawner.reward_mult = self.stage.reward_mult
+            self.spawner.affix_chance = (self.stage.affix_chance + 0.01 * self.wave
+                                         if self.stage.affix_chance > 0 else 0.0)
         self.phase = WavePhase.COUNTDOWN
         self.countdown = settings.WAVE_START_DELAY
 
     @property
     def is_boss_wave(self) -> bool:
+        if self.stage is not None:
+            return bool(self.stage.bosses_for(self.wave))
         return is_boss_wave(self.wave)
+
+    @property
+    def total_waves(self) -> int:
+        return self.stage.waves if self.stage is not None else 0
+
+    @property
+    def is_final_wave(self) -> bool:
+        return self.stage is not None and self.wave >= self.stage.waves
 
     @property
     def remaining(self) -> int:
@@ -111,6 +143,8 @@ class WaveManager:
         reward = settings.WAVE_CLEAR_BASE_REWARD + settings.WAVE_CLEAR_PER_WAVE * self.wave
         if self.is_boss_wave:
             reward *= 2
+        if self.stage is not None:
+            reward = int(reward * self.stage.reward_mult)
         return reward
 
     def update(self, dt: float, alive_count: int) -> bool:

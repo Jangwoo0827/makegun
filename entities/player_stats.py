@@ -37,6 +37,9 @@ class PlayerStats:
     heal_on_kill: float = 0.0
     wave_heal: float = 0.0
     invuln_bonus: float = 0.0
+    dash_cooldown_multiplier: float = 1.0
+    grenade_cooldown_multiplier: float = 1.0
+    grenade_damage_multiplier: float = 1.0
 
     def apply_effects(self, effects: dict[str, float]) -> None:
         """Additively apply an upgrade's effect dict. Unknown keys raise KeyError."""

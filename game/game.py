@@ -11,6 +11,8 @@ import pygame
 import settings
 from entities.enemy import EnemyData, load_enemy_data
 from game.play_state import PlayState
+from game.profile import Profile, RunResult
+from game.stages import StageData, load_stages
 from game.session import RunSession, default_starter
 from game.state import GameState, StateID
 from systems.save_manager import SaveManager
@@ -19,7 +21,10 @@ from systems.sound import SoundManager
 from systems.upgrade_manager import UpgradeManager
 from ui.menus import (GameOverState, IntermissionState, LoadoutState, MainMenuState, PauseState,
                       SettingsState)
+from ui.progression import MetaState, StageClearState, StageSelectState, StatsState
 from ui.shop import ShopState
+from ui.fonts import draw_text
+from ui.buttons import draw_panel
 from ui.wave_clear import WaveClearState
 from ui.weapon_editor import WeaponEditorState
 from weapons.weapon_builder import STARTER_PRESETS, WeaponPreset
@@ -69,6 +74,11 @@ class Game:
         self.sound.enabled = self.options.sound
 
         self.saves: SaveManager = SaveManager()
+        self.profile: Profile = Profile()
+        self.stages: list[StageData] = load_stages()
+        self.last_result: RunResult | None = None
+        #: [title, subtitle, seconds left]
+        self.toasts: list[list] = []
         self.session: RunSession | None = None
         self.play_state: PlayState | None = None
         self.shop: ShopManager | None = None
@@ -84,6 +94,10 @@ class Game:
             StateID.WEAPON_EDITOR: lambda: WeaponEditorState(self),
             StateID.PAUSE: lambda: PauseState(self),
             StateID.GAME_OVER: lambda: GameOverState(self),
+            StateID.STAGE_SELECT: lambda: StageSelectState(self),
+            StateID.STAGE_CLEAR: lambda: StageClearState(self),
+            StateID.META: lambda: MetaState(self),
+            StateID.STATS: lambda: StatsState(self),
         }
         self.change(StateID.MAIN_MENU)
 
@@ -97,15 +111,21 @@ class Game:
         idx = self.options.starter_index
         return STARTER_PRESETS[idx] if 0 <= idx < len(STARTER_PRESETS) else default_starter()
 
-    def start_new_run(self) -> None:
-        self.session = RunSession(self.library, self.upgrades, self.starter_preset())
+    def start_new_run(self, stage_index: int | None = None) -> None:
+        if stage_index is None:  # "try again" replays the last stage
+            stage_index = self.session.stage.index if self.session is not None else 0
+        stage = self.stages[max(0, min(stage_index, len(self.stages) - 1))]
+        self.saves.delete()
+        self.session = RunSession(self.library, self.upgrades, self.starter_preset(), stage)
+        self.session.apply_meta(*self.profile.meta_bonuses())
+        self.last_result = None
         self.shop = None
         self.play_state = PlayState(self)
         self.change(StateID.GAME)
 
     def continue_run(self) -> bool:
         """Load the saved run. Returns False if there is no valid save."""
-        loaded = self.saves.load(self.library, self.upgrades)
+        loaded = self.saves.load(self.library, self.upgrades, self.stages)
         if loaded is None:
             return False
         self.session, phase = loaded
@@ -123,7 +143,8 @@ class Game:
 
     def save_run(self) -> None:
         """Save the current run from wherever the player is."""
-        if self.session is None or self.play_state is None or not self.session.player.alive:
+        if (self.session is None or self.play_state is None or not self.session.player.alive
+                or self.session.run_recorded):
             return
         ps = self.play_state
         if ps.awaiting_next_wave:
@@ -131,6 +152,35 @@ class Game:
             self.saves.save(self.session, phase, ps.waves.wave)
         else:  # mid-wave: keep progress, restart this wave on continue
             self.saves.save(self.session, "wave", max(0, ps.waves.wave - 1))
+
+    def finish_run(self, victory: bool) -> RunResult | None:
+        """Bank a finished run into the profile exactly once (death or stage clear)."""
+        s = self.session
+        if s is None or s.run_recorded:
+            return self.last_result
+        s.run_recorded = True
+        waves_cleared = s.stage.waves if victory else max(0, s.wave_reached - 1)
+        cores = self.profile.record_run_end(s.stage.index, s.stage.stage_id, s.wave_reached, waves_cleared,
+                                            s.kills, s.boss_kills, victory, len(self.stages))
+        new = self.profile.check_achievements(s.run_stats)
+        for a in new:
+            self.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")
+        self.saves.delete()
+        self.last_result = RunResult(cores, victory, new)
+        return self.last_result
+
+    def toast(self, title: str, subtitle: str = "") -> None:
+        self.toasts.append([title, subtitle, 4.0])
+        self.sound.play("buy")
+
+    def _draw_toasts(self) -> None:
+        y = 112  # below the boss bar
+        for title, sub, t in self.toasts[:4]:
+            rect = pygame.Rect(settings.SCREEN_WIDTH - 420, y, 400, 54)
+            draw_panel(self.screen, rect, border=settings.UI_ACCENT, alpha=int(230 * min(1.0, t)))
+            draw_text(self.screen, title, (rect.x + 14, rect.y + 8), 16, settings.UI_ACCENT, True)
+            draw_text(self.screen, sub, (rect.x + 14, rect.y + 30), 13, settings.UI_TEXT)
+            y += 62
 
     def save_and_quit_to_menu(self) -> None:
         self.save_run()
@@ -203,6 +253,9 @@ class Game:
     def update(self, dt: float) -> None:
         if self.top is not None:
             self.top.update(dt)
+        for t in self.toasts:
+            t[2] -= dt
+        self.toasts = [t for t in self.toasts if t[2] > 0]
 
     def draw(self) -> None:
         self.screen.fill(settings.BG_COLOR)
@@ -212,6 +265,7 @@ class Game:
             start -= 1
         for state in self.stack[max(0, start):]:
             state.draw(self.screen)
+        self._draw_toasts()
 
     def step(self, dt: float) -> None:
         self.handle_events()

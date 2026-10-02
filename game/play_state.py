@@ -6,13 +6,16 @@ from typing import TYPE_CHECKING
 import pygame
 
 import settings
+from entities.boss_types import Warden
 from entities.enemy import Enemy, EnemyActions
+from entities.grenade import Grenade
 from entities.pickup import Pickup, PickupKind
 from entities.player import BUFF_DEFS
 from game.camera import Camera
 from game.state import GameState, StateID
 from game.world import World
 from systems.collision import CollisionSystem, line_of_sight
+from systems.affixes import affix_death_actions
 from systems.combat import CombatSystem
 from systems.loot_manager import LootManager
 from systems.spawn_manager import SpawnManager
@@ -34,14 +37,16 @@ class PlayState(GameState):
         super().__init__(game)
         session = game.require_session()
         self.session = session
-        self.world = World(session.player)
+        self.world = World(session.player, session.stage)
         session.player.pos = self.world.center()
         self.camera = Camera()
         self.camera.shake_enabled = game.options.screen_shake
         self.camera.snap_to(session.player.pos)
         self.world.effects.show_numbers = game.options.damage_numbers
         self.spawner = SpawnManager(game.enemy_db, self.world.walls)
-        self.waves = WaveManager(self.spawner)
+        self.waves = WaveManager(self.spawner, session.stage)
+        self.grenades: list[Grenade] = []
+        self.stats_timer: float = 0.0
         self.combat = CombatSystem(self.world, game.sound, self.camera.shake)
         self.collisions = CollisionSystem(self.combat.on_bullet_hit_enemy, self.combat.on_bullet_hit_wall,
                                           self._on_player_hit, self._on_pickup)
@@ -87,6 +92,12 @@ class PlayState(GameState):
                     self.game.sound.play("reload")
             elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
                 player.switch_weapon(event.key - pygame.K_1)
+            elif event.key in (pygame.K_SPACE, pygame.K_LSHIFT):
+                self._dash()
+            elif event.key == pygame.K_q:
+                self._throw_grenade()
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            self._throw_grenade()
         elif event.type == pygame.MOUSEWHEEL and len(player.weapons) > 1:
             player.switch_weapon((player.current - event.y) % len(player.weapons))
 
@@ -129,9 +140,17 @@ class PlayState(GameState):
         self.combat.update_homing(dt)
         for b in world.enemy_bullets:
             b.update(dt)
+        drones = sum(1 for e in world.enemies if e.alive and e.enemy_type == "drone")
         for e in list(world.enemies):
+            if isinstance(e, Warden):
+                e.drones_alive = drones
             e.has_los = line_of_sight(e.pos, player.pos, world.inner_walls)
             self._apply_enemy_actions(e, e.update(dt, player.pos))
+        for g in self.grenades:
+            g.update(dt)
+            if g.exploded:
+                self._explode_grenade(g)
+        self.grenades = [g for g in self.grenades if not g.exploded]
         for p in world.pickups:
             p.update(dt, player.pos, settings.PLAYER_PICKUP_RADIUS * self.session.stats.pickup_radius_multiplier)
 
@@ -143,6 +162,7 @@ class PlayState(GameState):
             if not e.alive:
                 self._on_enemy_killed(e)
                 self._apply_enemy_actions(e, e.on_death())
+                self._apply_enemy_actions(e, affix_death_actions(e))
         world.enemies = [e for e in world.enemies if e.alive]
         world.bullets = [b for b in world.bullets if b.alive]
         world.enemy_bullets = [b for b in world.enemy_bullets if b.alive]
@@ -152,9 +172,51 @@ class PlayState(GameState):
 
         world.effects.update(dt)
         self.camera.update(dt, player.pos, mouse_world - player.pos)
+        self.stats_timer -= dt
+        if self.stats_timer <= 0:
+            self.stats_timer = 0.5
+            self._track_run_stats()
 
         if player.alive and self.waves.update(dt, len(world.enemies)):
             self._on_wave_cleared()
+
+    # ---------------------------------------------------------------- skills
+    def _dash(self) -> None:
+        player = self.session.player
+        keys = pygame.key.get_pressed()
+        move = pygame.Vector2(keys[pygame.K_d] - keys[pygame.K_a], keys[pygame.K_s] - keys[pygame.K_w])
+        if player.try_dash(move):
+            self.game.profile.add_stat("total_dashes")
+            self.world.effects.burst(player.pos, (120, 200, 255), 10, 160, 0.3, 3)
+            self.game.sound.play("click")
+
+    def grenade_damage(self) -> float:
+        p = self.session.player
+        base = max(settings.GRENADE_MIN_DAMAGE, p.weapon.stats.dps * settings.GRENADE_DPS_FACTOR)
+        return base * p.stats.grenade_damage_multiplier
+
+    def _throw_grenade(self) -> None:
+        player = self.session.player
+        if player.try_grenade():
+            target = self.camera.screen_to_world(pygame.mouse.get_pos())
+            self.grenades.append(Grenade(player.pos, target, self.grenade_damage(), settings.GRENADE_RADIUS))
+
+    def _explode_grenade(self, g: Grenade) -> None:
+        alive_before = {e.uid for e in self.world.enemies if e.alive}
+        self.combat.explode(g.pos, g.radius, g.damage, self.session.player.weapon.stats.lifesteal)
+        killed = sum(1 for e in self.world.enemies if e.uid in alive_before and not e.alive)
+        self.session.bump("best_grenade_kills", killed)
+
+    def _track_run_stats(self) -> None:
+        """Feed per-run achievement counters and pop toasts for new unlocks."""
+        s = self.session
+        s.bump("run_kills", s.kills)
+        s.bump("run_money_peak", s.money)
+        s.bump("run_parts", len(s.owned_parts))
+        s.bump("run_synergies", max(len(w.stats.synergies) for w in s.weapons))
+        self.game.profile.max_stat("best_grenade_kills", s.run_stats.get("best_grenade_kills", 0))
+        for a in self.game.profile.check_achievements(s.run_stats):
+            self.game.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")
 
     def _apply_enemy_actions(self, enemy: Enemy, actions: EnemyActions) -> None:
         world, player = self.world, self.session.player
@@ -185,6 +247,13 @@ class PlayState(GameState):
         s = self.session
         s.kills += 1
         self.waves.register_kill()
+        profile = self.game.profile
+        profile.add_stat("total_kills")
+        if enemy.is_boss:
+            s.boss_kills += 1
+            profile.add_stat("total_boss_kills")
+        if enemy.affix is not None:
+            profile.add_stat("total_affix_kills")
         self.world.effects.burst(enemy.pos, enemy.data.color, 16 if not enemy.is_boss else 80,
                                  220 if not enemy.is_boss else 420, 0.5, 4)
         self.camera.shake(20 if enemy.is_boss else 3)
@@ -202,6 +271,14 @@ class PlayState(GameState):
         self.world.enemy_bullets.clear()
         if s.stats.wave_heal > 0:
             s.player.heal(s.player.max_hp * s.stats.wave_heal)
+        if self.waves.is_final_wave:
+            self.world.pickups.clear()
+            s.earn(self.waves.clear_reward())
+            self._track_run_stats()
+            self.game.sound.play("wave")
+            self.game.finish_run(victory=True)
+            self.game.push(StateID.STAGE_CLEAR)
+            return
         reward = self.waves.clear_reward()
         s.earn(reward)
         s.last_wave_reward = reward
@@ -253,8 +330,11 @@ class PlayState(GameState):
     def draw(self, surface: pygame.Surface) -> None:
         offset = self.camera.offset
         self.world.draw(surface, offset)
+        for g in self.grenades:
+            g.draw(surface, offset)
         player = self.session.player
         self.hud.draw(surface, player, self.session.money, self.waves, self.world.boss())
+        self.hud.draw_skills(surface, player)
         if self.game.top is self:
             self.hud.draw_crosshair(surface, pygame.mouse.get_pos(), player.weapon.stats.spread,
                                     player.weapon.charge_ratio if player.weapon.charge > 0 else 0.0)

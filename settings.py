@@ -2,13 +2,20 @@
 from __future__ import annotations
 
 import os
+import sys
 
 # --- Paths ---------------------------------------------------------------
-BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
+# When packaged with PyInstaller, read-only game data is unpacked to sys._MEIPASS,
+# while saves must live next to the .exe (a writable location).
+FROZEN: bool = bool(getattr(sys, "frozen", False))
+BASE_DIR: str = getattr(sys, "_MEIPASS", "") if FROZEN else os.path.dirname(os.path.abspath(__file__))
+USER_DIR: str = os.path.dirname(os.path.abspath(sys.executable)) if FROZEN else BASE_DIR
 DATA_DIR: str = os.path.join(BASE_DIR, "data")
 ASSETS_DIR: str = os.path.join(BASE_DIR, "assets")
 SOUND_DIR: str = os.path.join(ASSETS_DIR, "sounds")
-SAVE_FILE: str = os.path.join(BASE_DIR, "settings_save.json")
+SAVE_FILE: str = os.path.join(USER_DIR, "settings_save.json")
+PROFILE_FILE: str = os.path.join(USER_DIR, "profile.json")
+RUN_SAVE_FILE: str = os.path.join(USER_DIR, "save_run.json")
 
 # --- Display -------------------------------------------------------------
 TITLE: str = "GUN DESIGNER"
@@ -76,6 +83,20 @@ UI_BAD: Color = (255, 90, 90)
 HP_COLOR: Color = (230, 70, 80)
 MONEY_COLOR: Color = (255, 214, 90)
 
+# --- Active skills -------------------------------------------------------
+DASH_COOLDOWN: float = 1.6
+DASH_TIME: float = 0.16
+DASH_SPEED_MULT: float = 4.2
+GRENADE_COOLDOWN: float = 7.0
+GRENADE_RANGE: float = 420.0
+GRENADE_FUSE: float = 0.55
+GRENADE_RADIUS: float = 130.0
+GRENADE_MIN_DAMAGE: float = 80.0
+GRENADE_DPS_FACTOR: float = 1.5  # grenade damage scales with current weapon DPS
+
+# --- Elite affixes --------------------------------------------------------
+AFFIX_REWARD_MULT: float = 2.0
+
 # --- Balance caps -------------------------------------------------------
 # Hard limits so stacking upgrades can't break the game (or the frame rate).
 WEAPON_CAPS: dict[str, float] = {
@@ -107,6 +128,8 @@ PLAYER_STAT_CAPS: dict[str, tuple[float, float]] = {  # stat: (min, max)
     "pierce_bonus": (0, 4),
     "chain_bonus": (0, 3),
     "ricochet_bonus": (0, 3),
+    "dash_cooldown_multiplier": (0.4, 2.0),
+    "grenade_cooldown_multiplier": (0.4, 2.0),
 }
 # Default times each upgrade can be taken per run (data/upgrades.json "max_stacks" overrides).
 UPGRADE_MAX_STACKS: dict[str, int] = {"COMMON": 5, "UNCOMMON": 4, "RARE": 3, "EPIC": 2, "LEGENDARY": 1}

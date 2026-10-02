@@ -1,0 +1,44 @@
+[
+  {
+    "id": "outskirts", "name": "OUTSKIRTS", "subtitle": "The fight begins at the city edge.",
+    "waves": 15, "hp_mult": 1.0, "damage_mult": 1.0, "reward_mult": 1.0, "pool_offset": 0, "affix_chance": 0.0,
+    "bosses": {"15": ["boss"]},
+    "floor": [14, 16, 22], "grid": [24, 28, 38], "wall": [52, 58, 74], "wall_edge": [86, 96, 120],
+    "obstacles": [[-620, -380, 140, 140], [480, -380, 140, 140], [-620, 240, 140, 140], [480, 240, 140, 140],
+                  [-120, -560, 240, 60], [-120, 500, 240, 60], [-960, -40, 60, 200], [900, -100, 60, 200]]
+  },
+  {
+    "id": "foundry", "name": "FOUNDRY", "subtitle": "Molten corridors and heavy machines.",
+    "waves": 20, "hp_mult": 1.7, "damage_mult": 1.3, "reward_mult": 1.3, "pool_offset": 3, "affix_chance": 0.06,
+    "bosses": {"10": ["boss"], "20": ["titan"]},
+    "floor": [22, 15, 12], "grid": [40, 24, 18], "wall": [86, 52, 36], "wall_edge": [150, 90, 50],
+    "obstacles": [[-700, -500, 60, 380], [640, -500, 60, 380], [-700, 120, 60, 380], [640, 120, 60, 380],
+                  [-300, -120, 600, 50], [-300, 70, 600, 50], [-40, -600, 80, 220], [-40, 380, 80, 220]]
+  },
+  {
+    "id": "hive", "name": "THE HIVE", "subtitle": "Something is breeding in the dark.",
+    "waves": 20, "hp_mult": 2.8, "damage_mult": 1.7, "reward_mult": 1.7, "pool_offset": 6, "affix_chance": 0.12,
+    "bosses": {"10": ["titan"], "20": ["broodmother"]},
+    "floor": [12, 20, 14], "grid": [20, 36, 24], "wall": [44, 74, 44], "wall_edge": [90, 140, 70],
+    "obstacles": [[-160, -160, 120, 120], [40, -160, 120, 120], [-160, 40, 120, 120], [40, 40, 120, 120],
+                  [-800, -560, 160, 160], [640, -560, 160, 160], [-800, 400, 160, 160], [640, 400, 160, 160],
+                  [-460, -40, 80, 80], [380, -40, 80, 80]]
+  },
+  {
+    "id": "fortress", "name": "FORTRESS", "subtitle": "The Warden guards the inner walls.",
+    "waves": 20, "hp_mult": 4.5, "damage_mult": 2.2, "reward_mult": 2.2, "pool_offset": 9, "affix_chance": 0.2,
+    "bosses": {"10": ["broodmother"], "20": ["warden"]},
+    "floor": [16, 16, 24], "grid": [30, 30, 46], "wall": [70, 70, 96], "wall_edge": [130, 130, 170],
+    "obstacles": [[-560, -420, 400, 50], [160, -420, 400, 50], [-560, 370, 400, 50], [160, 370, 400, 50],
+                  [-560, -420, 50, 260], [510, -420, 50, 260], [-560, 160, 50, 260], [510, 160, 50, 260],
+                  [-60, -60, 120, 120]]
+  },
+  {
+    "id": "core", "name": "THE CORE", "subtitle": "Everything they have left.",
+    "waves": 25, "hp_mult": 7.0, "damage_mult": 2.8, "reward_mult": 2.8, "pool_offset": 12, "affix_chance": 0.3,
+    "bosses": {"10": ["warden"], "20": ["titan", "broodmother"], "25": ["boss", "warden"]},
+    "floor": [20, 10, 22], "grid": [40, 20, 44], "wall": [80, 40, 90], "wall_edge": [170, 90, 190],
+    "obstacles": [[-900, -560, 100, 100], [800, -560, 100, 100], [-900, 460, 100, 100], [800, 460, 100, 100],
+                  [-420, -300, 60, 600], [360, -300, 60, 600], [-200, -620, 400, 50], [-200, 570, 400, 50]]
+  }
+]

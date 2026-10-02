@@ -1,0 +1,12 @@
+{
+  "vitality":   {"name": "VITALITY",    "description": "+12 starting Max HP",          "max_level": 5, "base_cost": 20, "cost_growth": 1.6, "effects": {"max_hp": 12}},
+  "power":      {"name": "POWER",       "description": "+6% damage",                   "max_level": 5, "base_cost": 30, "cost_growth": 1.6, "effects": {"damage_multiplier": 0.06}},
+  "haste":      {"name": "HASTE",       "description": "+5% fire rate",                "max_level": 5, "base_cost": 30, "cost_growth": 1.6, "effects": {"fire_rate_multiplier": 0.05}},
+  "plating":    {"name": "PLATING",     "description": "-3% damage taken",             "max_level": 5, "base_cost": 35, "cost_growth": 1.7, "effects": {"damage_reduction": 0.03}},
+  "fortune":    {"name": "FORTUNE",     "description": "+8% money",                    "max_level": 5, "base_cost": 25, "cost_growth": 1.6, "effects": {"money_multiplier": 0.08}},
+  "head_start": {"name": "HEAD START",  "description": "+$80 starting money",          "max_level": 5, "base_cost": 20, "cost_growth": 1.5, "effects": {}, "start_money": 80},
+  "reflex":     {"name": "REFLEX",      "description": "-10% dash cooldown",           "max_level": 3, "base_cost": 40, "cost_growth": 1.8, "effects": {"dash_cooldown_multiplier": -0.10}},
+  "demolition": {"name": "DEMOLITION",  "description": "-10% grenade cooldown, +15% grenade damage", "max_level": 3, "base_cost": 40, "cost_growth": 1.8, "effects": {"grenade_cooldown_multiplier": -0.10, "grenade_damage_multiplier": 0.15}},
+  "arsenal":    {"name": "ARSENAL",     "description": "Start each run with +1 random part", "max_level": 3, "base_cost": 60, "cost_growth": 2.0, "effects": {}, "start_parts": 1},
+  "magnetism":  {"name": "MAGNETISM",   "description": "+20% pickup radius",           "max_level": 3, "base_cost": 15, "cost_growth": 1.5, "effects": {"pickup_radius_multiplier": 0.2}}
+}

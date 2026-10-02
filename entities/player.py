@@ -34,6 +34,11 @@ class Player:
         self.muzzle_flash: float = 0.0
         self.hurt_flash: float = 0.0
         self.alive: bool = True
+        # active skills
+        self.dash_cooldown: float = 0.0
+        self.dash_time: float = 0.0
+        self.dash_dir: pygame.Vector2 = pygame.Vector2(1, 0)
+        self.grenade_cooldown: float = 0.0
         self._effective: PlayerStats = stats.copy()
         self.refresh_weapons()
 
@@ -85,8 +90,31 @@ class Player:
             self.buffs[name] = BUFF_DURATION
             self.refresh_weapons()
 
+    @property
+    def dash_cooldown_max(self) -> float:
+        return settings.DASH_COOLDOWN * self.stats.dash_cooldown_multiplier
+
+    @property
+    def grenade_cooldown_max(self) -> float:
+        return settings.GRENADE_COOLDOWN * self.stats.grenade_cooldown_multiplier
+
+    def try_dash(self, move: pygame.Vector2) -> bool:
+        """Dash toward the movement direction (or the aim if standing still). Invulnerable while dashing."""
+        if self.dash_cooldown > 0 or self.dash_time > 0 or not self.alive:
+            return False
+        self.dash_dir = move.normalize() if move.length_squared() > 0 else self.aim_dir
+        self.dash_time = settings.DASH_TIME
+        self.dash_cooldown = self.dash_cooldown_max
+        return True
+
+    def try_grenade(self) -> bool:
+        if self.grenade_cooldown > 0 or not self.alive:
+            return False
+        self.grenade_cooldown = self.grenade_cooldown_max
+        return True
+
     def take_damage(self, amount: float) -> bool:
-        if self.invuln > 0 or not self.alive:
+        if self.invuln > 0 or self.dash_time > 0 or not self.alive:
             return False
         self.hp -= amount * (1.0 - self.stats.damage_reduction)
         self.invuln = settings.PLAYER_INVULN_TIME + self.stats.invuln_bonus
@@ -115,7 +143,13 @@ class Player:
     def update(self, dt: float, move: pygame.Vector2) -> None:
         if move.length_squared() > 0:
             move = move.normalize()
-        self.pos += move * self.move_speed * dt
+        self.dash_cooldown = max(0.0, self.dash_cooldown - dt)
+        self.grenade_cooldown = max(0.0, self.grenade_cooldown - dt)
+        if self.dash_time > 0:
+            self.dash_time -= dt
+            self.pos += self.dash_dir * self.move_speed * settings.DASH_SPEED_MULT * dt
+        else:
+            self.pos += move * self.move_speed * dt
         self.invuln = max(0.0, self.invuln - dt)
         self.muzzle_flash = max(0.0, self.muzzle_flash - dt)
         self.hurt_flash = max(0.0, self.hurt_flash - dt)
@@ -131,6 +165,10 @@ class Player:
 
     def draw(self, surface: pygame.Surface, offset: pygame.Vector2) -> None:
         p = self.pos - offset
+        if self.dash_time > 0:  # afterimages
+            for i in range(1, 4):
+                ghost = p - self.dash_dir * i * 14
+                pygame.draw.circle(surface, (90, 180, 230), ghost, self.radius * (1 - i * 0.2), 2)
         if self.invuln > 0 and int(self.invuln * 20) % 2 == 0:
             return
         pygame.draw.circle(surface, (0, 0, 0), p + pygame.Vector2(3, 4), self.radius)

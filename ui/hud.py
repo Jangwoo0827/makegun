@@ -78,16 +78,23 @@ class HUD:
             bx += 70
 
         # --- Wave (top-center)
-        wave_rect = pygame.Rect(w // 2 - 150, 10, 300, 58)
+        wave_rect = pygame.Rect(w // 2 - 170, 10, 340, 58)
         draw_panel(surface, wave_rect, alpha=200)
-        label = f"WAVE {waves.wave}" + ("  [BOSS]" if waves.is_boss_wave else "")
+        total = f"/{waves.total_waves}" if waves.total_waves else ""
+        stage = f"{waves.stage.name}  " if waves.stage is not None else ""
+        label = f"{stage}WAVE {waves.wave}{total}" + ("  [BOSS]" if waves.is_boss_wave else "")
         draw_text(surface, label, (w // 2, 26), 22, settings.UI_ACCENT, bold=True, anchor="center")
         draw_text(surface, f"ENEMIES LEFT: {waves.remaining}", (w // 2, 46), 14, settings.UI_TEXT, anchor="center")
         draw_bar(surface, pygame.Rect(w // 2 - 130, 58, 260, 5), waves.progress, settings.UI_ACCENT, (40, 40, 50))
 
         if waves.phase == WavePhase.COUNTDOWN:
             draw_text(surface, f"WAVE {waves.wave}", (w // 2, h // 2 - 120), 64, settings.UI_ACCENT, True, "center")
-            sub = "THE GUNNER APPROACHES" if waves.is_boss_wave else f"Starting in {max(0.0, waves.countdown):.1f}"
+            if waves.is_final_wave:
+                sub = "FINAL WAVE - SURVIVE TO CLEAR THE STAGE"
+            elif waves.is_boss_wave:
+                sub = "BOSS INCOMING"
+            else:
+                sub = f"Starting in {max(0.0, waves.countdown):.1f}"
             draw_text(surface, sub, (w // 2, h // 2 - 70), 22, settings.UI_TEXT, True, "center")
 
         # --- Boss bar
@@ -128,6 +135,8 @@ class HUD:
         lines = [("DMG", f"{s.damage:.0f}" + (f"x{s.bullet_count}" if s.bullet_count > 1 else "")),
                  ("RATE", f"{s.fire_rate:.1f}"), ("DPS", f"{s.dps:.0f}"), ("PIERCE", str(s.pierce)),
                  ("CRIT", f"{s.crit_chance * 100:.0f}%"), ("MODE", s.fire_mode.upper())]
+        if s.synergies:
+            draw_text(surface, "SYNERGY: " + ", ".join(s.synergies), (16, h - 84), 14, (255, 170, 255), bold=True)
         sr = pygame.Rect(14, h - 62, 430, 48)
         draw_panel(surface, sr, alpha=180)
         x = sr.x + 12
@@ -135,6 +144,26 @@ class HUD:
             draw_text(surface, k, (x, sr.y + 7), 12, settings.UI_TEXT_DIM, bold=True)
             draw_text(surface, v, (x, sr.y + 23), 16, settings.UI_TEXT, bold=True)
             x += 70
+
+    @staticmethod
+    def draw_skills(surface: pygame.Surface, player: Player) -> None:
+        """Dash / grenade cooldown icons above the weapon panel."""
+        w, h = surface.get_size()
+        skills = [("DASH", "SPACE", player.dash_cooldown, player.dash_cooldown_max, (120, 200, 255)),
+                  ("NADE", "Q/RMB", player.grenade_cooldown, player.grenade_cooldown_max, (255, 140, 80))]
+        for i, (name, key, cd, cd_max, color) in enumerate(skills):
+            rect = pygame.Rect(w - 330 + i * 86, h - 186, 78, 58)
+            ready = cd <= 0
+            draw_panel(surface, rect, border=color if ready else settings.UI_BORDER, alpha=210)
+            if not ready:
+                frac = cd / max(0.01, cd_max)
+                shade = pygame.Surface((rect.w - 4, int((rect.h - 4) * frac)), pygame.SRCALPHA)
+                shade.fill((0, 0, 0, 150))
+                surface.blit(shade, (rect.x + 2, rect.bottom - 2 - shade.get_height()))
+            draw_text(surface, name, (rect.centerx, rect.y + 16), 16, color if ready else settings.UI_TEXT_DIM,
+                      True, "center")
+            sub = key if ready else f"{cd:.1f}s"
+            draw_text(surface, sub, (rect.centerx, rect.y + 40), 12, settings.UI_TEXT, anchor="center")
 
     @staticmethod
     def draw_crosshair(surface: pygame.Surface, pos: tuple[int, int], spread: float, charge: float) -> None:

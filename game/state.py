@@ -21,6 +21,10 @@ class StateID(Enum):
     WEAPON_EDITOR = auto()
     PAUSE = auto()
     GAME_OVER = auto()
+    STAGE_SELECT = auto()
+    STAGE_CLEAR = auto()
+    META = auto()
+    STATS = auto()
 
 
 class GameState:
