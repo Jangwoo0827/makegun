@@ -95,7 +95,7 @@ class RunSession:
         return int(settings.WEAPON_UPGRADE_BASE_COST * (1.45 ** (weapon.level - 1)))
 
     def upgrade_weapon(self, weapon: Weapon) -> bool:
-        if not self.spend(self.weapon_upgrade_cost(weapon)):
+        if weapon.level >= settings.WEAPON_MAX_LEVEL or not self.spend(self.weapon_upgrade_cost(weapon)):
             return False
         weapon.level += 1
         self.player.refresh_weapons()

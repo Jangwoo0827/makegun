@@ -76,6 +76,48 @@ UI_BAD: Color = (255, 90, 90)
 HP_COLOR: Color = (230, 70, 80)
 MONEY_COLOR: Color = (255, 214, 90)
 
+# --- Balance caps -------------------------------------------------------
+# Hard limits so stacking upgrades can't break the game (or the frame rate).
+WEAPON_CAPS: dict[str, float] = {
+    "fire_rate": 30.0,         # shots per second
+    "bullet_count": 16,        # projectiles per shot
+    "crit_chance": 0.75,
+    "crit_damage": 5.0,        # x damage on crit
+    "pierce": 10,
+    "chain": 6,
+    "ricochet": 6,
+    "split": 6,
+    "explosion_radius": 220.0,
+    "lifesteal": 0.12,
+    "luck": 2.0,
+    "homing": 8.0,
+}
+PLAYER_STAT_CAPS: dict[str, tuple[float, float]] = {  # stat: (min, max)
+    "damage_reduction": (0.0, 0.5),
+    "invuln_bonus": (0.0, 0.9),
+    "money_multiplier": (0.5, 3.0),
+    "move_speed_multiplier": (0.5, 1.8),
+    "spread_multiplier": (0.3, 2.0),
+    "reload_multiplier": (0.35, 3.0),
+    "pickup_radius_multiplier": (1.0, 3.0),
+    "regen": (0.0, 8.0),
+    "heal_on_kill": (0.0, 4.0),
+    "wave_heal": (0.0, 0.6),
+    "bullet_count_bonus": (0, 4),
+    "pierce_bonus": (0, 4),
+    "chain_bonus": (0, 3),
+    "ricochet_bonus": (0, 3),
+}
+# Default times each upgrade can be taken per run (data/upgrades.json "max_stacks" overrides).
+UPGRADE_MAX_STACKS: dict[str, int] = {"COMMON": 5, "UNCOMMON": 4, "RARE": 3, "EPIC": 2, "LEGENDARY": 1}
+SHOP_UPGRADE_PRICE_GROWTH: float = 1.6   # price x this per copy already owned
+SHOP_REROLL_COST_STEP: int = 20          # each reroll in the same visit costs this much more
+WEAPON_MAX_LEVEL: int = 25
+# Enemies grow exponentially after this wave so endless runs stay dangerous.
+LATE_WAVE_START: int = 25
+LATE_WAVE_HP_GROWTH: float = 1.06
+LATE_WAVE_DAMAGE_GROWTH: float = 1.03
+
 RARITY_COLORS: dict[str, Color] = {
     "COMMON": (190, 195, 205),
     "UNCOMMON": (100, 220, 120),

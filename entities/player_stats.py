@@ -49,10 +49,15 @@ class PlayerStats:
             if isinstance(current, int) and not isinstance(current, bool):
                 new_value = int(round(new_value))
             setattr(self, key, new_value)
+        self.clamp()
+
+    def clamp(self) -> None:
+        """Enforce settings.PLAYER_STAT_CAPS (also applied to loaded saves)."""
         self.max_hp = max(10.0, self.max_hp)
-        self.reload_multiplier = max(0.2, self.reload_multiplier)
-        self.spread_multiplier = max(0.1, self.spread_multiplier)
-        self.damage_reduction = min(0.7, self.damage_reduction)
+        for key, (lo, hi) in settings.PLAYER_STAT_CAPS.items():
+            value = getattr(self, key)
+            clamped = max(lo, min(hi, value))
+            setattr(self, key, type(value)(clamped))
 
     def copy(self) -> "PlayerStats":
         return replace(self)

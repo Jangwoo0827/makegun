@@ -7,7 +7,7 @@ from enum import Enum
 
 import settings
 from game.session import RunSession
-from systems.upgrade_manager import Upgrade
+from systems.upgrade_manager import Upgrade, UpgradeManager
 from weapons.weapon_parts import Rarity
 
 UPGRADE_PRICES: dict[Rarity, int] = {
@@ -40,10 +40,20 @@ class ShopManager:
         self.session = session
         self.offers: list[ShopOffer] = []
         self.stock_wave: int = -1
+        self.rerolls: int = 0
 
     def ensure_stock(self, wave: int) -> None:
         if self.stock_wave != wave:
+            self.rerolls = 0
             self.generate(wave)
+
+    @property
+    def reroll_cost(self) -> int:
+        return settings.SHOP_REROLL_COST + settings.SHOP_REROLL_COST_STEP * self.rerolls
+
+    def upgrade_price(self, upgrade: Upgrade) -> int:
+        owned = UpgradeManager.stack_counts(self.session.upgrades_taken).get(upgrade.upgrade_id, 0)
+        return int(UPGRADE_PRICES[upgrade.rarity] * settings.SHOP_UPGRADE_PRICE_GROWTH ** owned)
 
     def generate(self, wave: int) -> None:
         s = self.session
@@ -58,9 +68,9 @@ class ShopManager:
             price = max(60, int(part.price * (1.0 + wave * 0.02)))
             offers.append(ShopOffer(OfferKind.PART, part.name, part.category.label, part.description,
                                     price, part.rarity, part_id=part.part_id))
-        for up in s.upgrade_manager.roll_choices(wave, 2, s.stats.luck):
+        for up in s.upgrade_manager.roll_choices(wave, 2, s.stats.luck, s.upgrades_taken):
             offers.append(ShopOffer(OfferKind.UPGRADE, up.name, "Upgrade", up.description,
-                                    UPGRADE_PRICES[up.rarity], up.rarity, upgrade=up))
+                                    self.upgrade_price(up), up.rarity, upgrade=up))
         while len(offers) < settings.SHOP_OFFER_COUNT:
             if random.random() < 0.5:
                 offers.append(ShopOffer(OfferKind.HEALTH, "MED KIT", "Consumable", "Restore 50% HP",
@@ -71,10 +81,21 @@ class ShopManager:
         self.offers = offers[: settings.SHOP_OFFER_COUNT]
 
     def reroll(self) -> bool:
-        if not self.session.spend(settings.SHOP_REROLL_COST):
+        if not self.session.spend(self.reroll_cost):
             return False
+        self.rerolls += 1
         self.generate(self.stock_wave)
         return True
+
+    def _reprice_upgrades(self) -> None:
+        """After buying an upgrade, other copies on the shelf get pricier or sell out at max stacks."""
+        available = {u.upgrade_id for u in self.session.upgrade_manager.available(self.session.upgrades_taken)}
+        for o in self.offers:
+            if o.kind == OfferKind.UPGRADE and o.upgrade and not o.sold:
+                if o.upgrade.upgrade_id not in available:
+                    o.sold = True
+                else:
+                    o.price = self.upgrade_price(o.upgrade)
 
     def buy(self, offer: ShopOffer) -> bool:
         s = self.session
@@ -84,6 +105,7 @@ class ShopManager:
             s.own_part(offer.part_id)
         elif offer.kind == OfferKind.UPGRADE and offer.upgrade:
             s.apply_upgrade(offer.upgrade)
+            self._reprice_upgrades()
         elif offer.kind == OfferKind.HEALTH:
             s.player.heal(s.player.max_hp * 0.5)
         elif offer.kind == OfferKind.AMMO:

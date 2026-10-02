@@ -58,17 +58,19 @@ class ShopState(GameState):
         for i in range(len(s.weapons)):
             self.buttons.add(Button((rx + i * 66, 300, 60, 30), f"#{i + 1}", lambda i=i: self._pick_weapon(i),
                                     font_size=14, selected=i == self.weapon_index))
-        self.buttons.add(Button((rx, 340, 390, 50), f"UPGRADE WEAPON  Lv.{weapon.level}->{weapon.level + 1}",
-                                self._upgrade_weapon, font_size=16, subtext=f"${cost}  (+12% damage)",
-                                enabled=s.can_afford(cost)))
+        maxed = weapon.level >= settings.WEAPON_MAX_LEVEL
+        label = f"WEAPON MAX LEVEL ({weapon.level})" if maxed else             f"UPGRADE WEAPON  Lv.{weapon.level}->{weapon.level + 1}"
+        self.buttons.add(Button((rx, 340, 390, 50), label, self._upgrade_weapon, font_size=16,
+                                subtext="" if maxed else f"${cost}  (+12% damage)",
+                                enabled=not maxed and s.can_afford(cost)))
         slot_price = s.next_slot_price()
         self.buttons.add(Button((rx, 400, 390, 50), "NEW WEAPON SLOT" if slot_price else "ALL SLOTS OWNED",
                                 self._buy_slot, font_size=16,
                                 subtext=f"${slot_price}  (copy of current gun)" if slot_price else "",
                                 enabled=slot_price is not None and s.can_afford(slot_price)))
         self.buttons.add(Button((rx, 460, 390, 50), "REROLL STOCK", self._reroll, font_size=16,
-                                subtext=f"${settings.SHOP_REROLL_COST}",
-                                enabled=s.can_afford(settings.SHOP_REROLL_COST)))
+                                subtext=f"${self.shop.reroll_cost}",
+                                enabled=s.can_afford(self.shop.reroll_cost)))
         self.buttons.add(Button((rx, H - 70, 185, 50), "EDITOR", lambda: self.game.replace(StateID.WEAPON_EDITOR),
                                 hotkey=pygame.K_e))
         self.buttons.add(Button((rx + 205, H - 70, 185, 50), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))

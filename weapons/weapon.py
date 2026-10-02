@@ -142,6 +142,10 @@ class Weapon:
             crit_base = settings.PLAYER_CRIT_CHANCE
             crit_mult_base = settings.PLAYER_CRIT_DAMAGE
 
+        caps = settings.WEAPON_CAPS
+        for key in ("fire_rate", "bullet_count", "pierce", "chain", "ricochet", "split",
+                    "explosion_radius", "lifesteal", "luck", "homing"):
+            values[key] = min(values[key], caps[key])
         return WeaponStats(
             damage=max(1.0, values["damage"]),
             fire_rate=max(0.3, values["fire_rate"]),
@@ -151,8 +155,8 @@ class Weapon:
             bullet_count=max(1, int(round(values["bullet_count"]))),
             spread=max(0.0, values["spread"]),
             range=max(120.0, values["range"]),
-            crit_chance=min(1.0, crit_base + values["crit_chance"]),
-            crit_damage=crit_mult_base + values["crit_damage"],
+            crit_chance=min(caps["crit_chance"], crit_base + values["crit_chance"]),
+            crit_damage=min(caps["crit_damage"], crit_mult_base + values["crit_damage"]),
             pierce=max(0, int(round(values["pierce"]))),
             explosion_radius=max(0.0, values["explosion_radius"]),
             knockback=values["knockback"],

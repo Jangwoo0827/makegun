@@ -19,6 +19,7 @@ class Upgrade:
     description: str
     rarity: Rarity
     effects: dict[str, float]
+    max_stacks: int = 1
 
 
 class UpgradeManager:
@@ -33,10 +34,25 @@ class UpgradeManager:
             bad = set(effects) - valid
             if bad:
                 raise KeyError(f"Upgrade '{uid}' has unknown effect keys: {bad}")
-            self.upgrades.append(Upgrade(uid, d["name"], d["description"], Rarity(d["rarity"]), effects))
+            rarity = Rarity(d["rarity"])
+            stacks = int(d.get("max_stacks", settings.UPGRADE_MAX_STACKS[rarity.value]))
+            self.upgrades.append(Upgrade(uid, d["name"], d["description"], rarity, effects, stacks))
 
-    def roll_choices(self, wave: int, count: int = 3, luck: float = 0.0) -> list[Upgrade]:
-        pool = list(self.upgrades)
+    @staticmethod
+    def stack_counts(taken: list[Upgrade]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for u in taken:
+            counts[u.upgrade_id] = counts.get(u.upgrade_id, 0) + 1
+        return counts
+
+    def available(self, taken: list[Upgrade]) -> list[Upgrade]:
+        """Upgrades that haven't hit their max_stacks yet."""
+        counts = self.stack_counts(taken)
+        return [u for u in self.upgrades if counts.get(u.upgrade_id, 0) < u.max_stacks]
+
+    def roll_choices(self, wave: int, count: int = 3, luck: float = 0.0,
+                     taken: list[Upgrade] | None = None) -> list[Upgrade]:
+        pool = self.available(taken or [])
         choices: list[Upgrade] = []
         for _ in range(min(count, len(pool))):
             weights = [rarity_weight(u.rarity, wave, luck * 0.5) for u in pool]

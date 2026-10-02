@@ -17,7 +17,9 @@ class WavePhase(Enum):
 
 def wave_scaling(wave: int) -> WaveScaling:
     n = wave - 1
-    return WaveScaling(hp=1.0 + 0.14 * n + 0.004 * n * n, damage=1.0 + 0.07 * n,
+    late = max(0, wave - settings.LATE_WAVE_START)
+    return WaveScaling(hp=(1.0 + 0.14 * n + 0.004 * n * n) * settings.LATE_WAVE_HP_GROWTH ** late,
+                       damage=(1.0 + 0.07 * n) * settings.LATE_WAVE_DAMAGE_GROWTH ** late,
                        speed=min(1.45, 1.0 + 0.02 * n))
 
 

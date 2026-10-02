@@ -205,7 +205,7 @@ class PlayState(GameState):
         reward = self.waves.clear_reward()
         s.earn(reward)
         s.last_wave_reward = reward
-        s.pending_upgrades = s.upgrade_manager.roll_choices(self.waves.wave, 3, s.stats.luck)
+        s.pending_upgrades = s.upgrade_manager.roll_choices(self.waves.wave, 3, s.stats.luck, s.upgrades_taken)
         self.awaiting_next_wave = True
         self.game.save_run()
         self.game.sound.play("wave")

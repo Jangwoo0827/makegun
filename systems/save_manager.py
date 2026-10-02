@@ -103,6 +103,8 @@ class SaveManager:
             if key in valid:
                 setattr(session.stats, key, type(getattr(session.stats, key))(value))
 
+        session.stats.clamp()  # saves from older, uncapped versions get brought in line
+
         weapons = []
         for wd in data["weapons"][: settings.MAX_WEAPON_SLOTS]:
             part_ids: dict[PartCategory, str] = {}
@@ -111,7 +113,7 @@ class SaveManager:
                 if pid in library.parts and library.get(pid).category == category:
                     part_ids[category] = pid
             weapon = session.builder.build(part_ids, wd.get("name"))
-            weapon.level = max(1, int(wd.get("level", 1)))
+            weapon.level = max(1, min(settings.WEAPON_MAX_LEVEL, int(wd.get("level", 1))))
             weapons.append(weapon)
         if not weapons:
             raise ValueError("save has no weapons")
