@@ -21,7 +21,7 @@ def wave_scaling(wave: int) -> WaveScaling:
     n = wave - 1
     late = max(0, wave - settings.LATE_WAVE_START)
     return WaveScaling(hp=(1.0 + 0.14 * n + 0.004 * n * n) * settings.LATE_WAVE_HP_GROWTH ** late,
-                       damage=(1.0 + 0.07 * n) * settings.LATE_WAVE_DAMAGE_GROWTH ** late,
+                       damage=(1.0 + settings.WAVE_DAMAGE_GROWTH * n) * settings.LATE_WAVE_DAMAGE_GROWTH ** late,
                        speed=min(1.45, 1.0 + 0.02 * n))
 
 
@@ -50,7 +50,7 @@ def build_wave(wave: int, stage: StageData | None = None, count_mult: float = 1.
     bosses = list(stage.bosses_for(wave)) if stage is not None else \
         ([boss_for_wave(wave)] if is_boss_wave(wave) else [])
     stage_index = stage.index if stage is not None else 0
-    count = int((6 + int(wave * 2.2) + stage_index * 2) * count_mult)
+    count = int((6 + int(wave * 2.2) + stage_index) * count_mult)
     if stage is not None and stage.mode == "bossrush":
         # each wave is a boss with a few escorts
         escorts = random.choices(["normal", "fast", "shooter", "charger"], k=int((2 + wave) * count_mult))
@@ -114,7 +114,9 @@ class WaveManager:
         scaling.damage *= self.asc.enemy_damage
         scaling.speed *= self.asc.enemy_speed
         self.spawner.start(queue, scaling, interval)
-        self.spawner.boss_hp_mult = self.asc.boss_hp
+        # bosses scale with the stage more gently than regular enemies
+        stage_hp = self.stage.hp_mult if self.stage is not None else 1.0
+        self.spawner.boss_hp_mult = self.asc.boss_hp * stage_hp ** (settings.BOSS_STAGE_HP_EXPONENT - 1.0)
         if self.stage is not None:
             self.spawner.reward_mult = self.stage.reward_mult
             self.spawner.affix_chance = (self.stage.affix_chance + 0.01 * self.wave

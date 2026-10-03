@@ -140,6 +140,8 @@ SHOP_REROLL_COST_STEP: int = 20          # each reroll in the same visit costs t
 WEAPON_MAX_LEVEL: int = 25
 EVOLVE_LEVEL: int = 8  # weapon level needed to evolve a synergy weapon
 # Enemies grow exponentially after this wave so endless runs stay dangerous.
+WAVE_DAMAGE_GROWTH: float = 0.06    # enemy damage +6% per wave within a stage
+BOSS_STAGE_HP_EXPONENT: float = 0.8  # bosses get stage_hp_mult ** 0.8 instead of the full multiplier
 LATE_WAVE_START: int = 25
 LATE_WAVE_HP_GROWTH: float = 1.06
 LATE_WAVE_DAMAGE_GROWTH: float = 1.03

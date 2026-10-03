@@ -8,7 +8,7 @@
   "damage_mult": 1.0,
   "reward_mult": 1.0,
   "pool_offset": 0,
-  "affix_chance": 0.0,
+  "affix_chance": 0,
   "bosses": {
    "15": [
     "boss"
@@ -90,11 +90,11 @@
   "name": "FOUNDRY",
   "subtitle": "Molten corridors and heavy machines.",
   "waves": 20,
-  "hp_mult": 1.7,
-  "damage_mult": 1.3,
+  "hp_mult": 1.5,
+  "damage_mult": 1.2,
   "reward_mult": 1.3,
   "pool_offset": 3,
-  "affix_chance": 0.06,
+  "affix_chance": 0.05,
   "bosses": {
    "10": [
     "boss"
@@ -179,11 +179,11 @@
   "name": "THE HIVE",
   "subtitle": "Something is breeding in the dark.",
   "waves": 20,
-  "hp_mult": 2.8,
-  "damage_mult": 1.7,
+  "hp_mult": 2.1,
+  "damage_mult": 1.4,
   "reward_mult": 1.7,
   "pool_offset": 6,
-  "affix_chance": 0.12,
+  "affix_chance": 0.09,
   "bosses": {
    "10": [
     "titan"
@@ -280,11 +280,11 @@
   "name": "FORTRESS",
   "subtitle": "The Warden guards the inner walls.",
   "waves": 20,
-  "hp_mult": 4.5,
-  "damage_mult": 2.2,
+  "hp_mult": 2.6,
+  "damage_mult": 1.5,
   "reward_mult": 2.2,
   "pool_offset": 9,
-  "affix_chance": 0.2,
+  "affix_chance": 0.14,
   "bosses": {
    "10": [
     "broodmother"
@@ -375,11 +375,11 @@
   "name": "THE CORE",
   "subtitle": "Everything they have left.",
   "waves": 25,
-  "hp_mult": 7.0,
-  "damage_mult": 2.8,
+  "hp_mult": 3.5,
+  "damage_mult": 1.7,
   "reward_mult": 2.8,
   "pool_offset": 12,
-  "affix_chance": 0.3,
+  "affix_chance": 0.2,
   "bosses": {
    "10": [
     "warden"
@@ -469,11 +469,11 @@
   "name": "WASTELAND",
   "subtitle": "Scorched ground, nowhere to hide.",
   "waves": 25,
-  "hp_mult": 10.0,
-  "damage_mult": 3.4,
+  "hp_mult": 4.6,
+  "damage_mult": 1.95,
   "reward_mult": 3.4,
   "pool_offset": 14,
-  "affix_chance": 0.35,
+  "affix_chance": 0.25,
   "bosses": {
    "10": [
     "titan"
@@ -550,11 +550,11 @@
   "name": "THE SPIRE",
   "subtitle": "A tower of guns, floor after floor.",
   "waves": 25,
-  "hp_mult": 14.0,
-  "damage_mult": 4.0,
+  "hp_mult": 6.0,
+  "damage_mult": 2.25,
   "reward_mult": 4.0,
   "pool_offset": 16,
-  "affix_chance": 0.42,
+  "affix_chance": 0.3,
   "bosses": {
    "10": [
     "broodmother"
@@ -632,11 +632,11 @@
   "name": "OMEGA",
   "subtitle": "The Architect waits with a copy of your gun.",
   "waves": 25,
-  "hp_mult": 19.0,
-  "damage_mult": 4.8,
+  "hp_mult": 8.0,
+  "damage_mult": 2.6,
   "reward_mult": 4.8,
   "pool_offset": 18,
-  "affix_chance": 0.5,
+  "affix_chance": 0.36,
   "bosses": {
    "10": [
     "boss",
