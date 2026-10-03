@@ -35,6 +35,7 @@ class Player:
         self.hurt_flash: float = 0.0
         self.alive: bool = True
         self.color: tuple[int, int, int] = settings.PLAYER_COLOR  # set from the chosen character
+        self.sprite: str = "player"  # assets/images/player/<character>.png, falls back to player.png
         # active skills
         self.dash_cooldown: float = 0.0
         self.dash_time: float = 0.0
@@ -174,7 +175,8 @@ class Player:
             return
         pygame.draw.circle(surface, (0, 0, 0), p + pygame.Vector2(3, 4), self.radius)
         size = int(self.radius * 2.5)
-        if not ASSETS.blit_centered(surface, "player", "player", p, (size, size), -math.degrees(self.angle)):
+        name = self.sprite if ASSETS.has("player", self.sprite) else "player"
+        if not ASSETS.blit_centered(surface, "player", name, p, (size, size), -math.degrees(self.angle)):
             body = (255, 120, 120) if self.hurt_flash > 0 else self.color
             pygame.draw.circle(surface, body, p, self.radius)
             pygame.draw.circle(surface, settings.PLAYER_OUTLINE, p, self.radius, 2)

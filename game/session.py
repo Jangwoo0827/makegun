@@ -50,6 +50,7 @@ class RunSession:
     def apply_character(self, character: Character) -> None:
         self.character = character.char_id
         self.player.color = character.color
+        self.player.sprite = character.char_id
         if character.effects:
             self.stats.apply_effects(character.effects)
         if character.start_attachment and character.start_attachment in self.library.parts:

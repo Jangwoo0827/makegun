@@ -96,6 +96,7 @@ class SaveManager:
         session.ascension = ascension_mods(int(data.get("ascension", 0)))
         session.character = str(data.get("character", DEFAULT_CHARACTER))
         session.player.color = get_character(session.character).color
+        session.player.sprite = session.character
         session.run_stats = {k: float(v) for k, v in data.get("run_stats", {}).items()}
         session.money = int(data["money"])
         session.money_earned = int(data.get("money_earned", 0))
