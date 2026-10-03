@@ -27,7 +27,7 @@ To build or test the web version locally:
 ```bash
 pip install pygbag
 python tools/build_web.py           # -> dist/gundesigner_web.zip
-python tools/build_web.py --serve   # test at http://127.0.0.1:8000 (not "localhost": pygbag dev mode)
+python tools/build_web.py --serve   # test locally at http://localhost:8000
 ```
 
 ## Automatic builds
