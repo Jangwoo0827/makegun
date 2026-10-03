@@ -25,6 +25,7 @@ class StateID(Enum):
     STAGE_CLEAR = auto()
     META = auto()
     STATS = auto()
+    DEVICE_SELECT = auto()
 
 
 class GameState:

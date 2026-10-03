@@ -1,6 +1,6 @@
 """On-screen touch controls for phones/tablets (web build).
 
-Activates automatically on the first touch and turns off again when a real mouse or keyboard is used.
+Enabled when the player picks MOBILE on the device screen (Options.input_mode); never auto-detected.
 - Left half: floating MOVE joystick.
 - Right half: floating AIM joystick. Holding it aims and fires.
 - Buttons: DASH, GRENADE, RELOAD, SWITCH weapon, PAUSE.
@@ -97,8 +97,9 @@ class TouchControls:
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         """Returns True if the event belongs to the touch controls (callers should then ignore it)."""
+        if not self.active:
+            return False
         if event.type == pygame.FINGERDOWN:
-            self.active = True
             pos = self._screen_pos(event)
             for b in self.buttons:
                 if b.hit(pos):
@@ -119,15 +120,7 @@ class TouchControls:
             return True
         # Touch also produces synthetic mouse events (event.touch == True): swallow them in-game.
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION, pygame.MOUSEWHEEL):
-            if getattr(event, "touch", False):
-                return self.active
-            if event.type != pygame.MOUSEMOTION or event.rel != (0, 0):
-                self.active = False  # a real mouse took over
-                self.reset()
-            return False
-        if event.type == pygame.KEYDOWN and self.active:
-            self.active = False
-            self.reset()
+            return bool(getattr(event, "touch", False))
         return False
 
     # ----------------------------------------------------------------- draw

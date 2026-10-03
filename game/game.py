@@ -21,7 +21,7 @@ from systems.save_manager import SaveManager
 from systems.shop_manager import ShopManager
 from systems.sound import SoundManager
 from systems.upgrade_manager import UpgradeManager
-from ui.menus import (GameOverState, IntermissionState, LoadoutState, MainMenuState, PauseState,
+from ui.menus import (DeviceSelectState, GameOverState, IntermissionState, LoadoutState, MainMenuState, PauseState,
                       SettingsState)
 from ui.progression import MetaState, StageClearState, StageSelectState, StatsState
 from ui.shop import ShopState
@@ -40,6 +40,7 @@ class Options:
     screen_shake: bool = True
     damage_numbers: bool = True
     starter_index: int = 0
+    input_mode: str = ""  # "pc" | "mobile"; empty until chosen on the device screen
 
     @classmethod
     def load(cls) -> "Options":
@@ -99,8 +100,10 @@ class Game:
             StateID.STAGE_CLEAR: lambda: StageClearState(self),
             StateID.META: lambda: MetaState(self),
             StateID.STATS: lambda: StatsState(self),
+            StateID.DEVICE_SELECT: lambda: DeviceSelectState(self),
         }
-        self.change(StateID.MAIN_MENU)
+        self.touch.active = self.options.input_mode == "mobile"
+        self.change(StateID.MAIN_MENU if self.options.input_mode else StateID.DEVICE_SELECT)
 
     # ---------------------------------------------------------------- session
     def require_session(self) -> RunSession:
@@ -183,6 +186,13 @@ class Game:
             self.change(StateID.MAIN_MENU)
         except Exception:
             self.running = False
+
+    def set_input_mode(self, mode: str) -> None:
+        """'pc' (mouse + keyboard) or 'mobile' (on-screen touch controls)."""
+        self.options.input_mode = mode
+        self.options.save()
+        self.touch.active = mode == "mobile"
+        self.touch.reset()
 
     def toast(self, title: str, subtitle: str = "") -> None:
         self.toasts.append([title, subtitle, 4.0])

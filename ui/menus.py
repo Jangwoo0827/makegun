@@ -170,6 +170,47 @@ class LoadoutState(MenuState):
                 draw_text(surface, v, (rect.right - 20, rect.y + 180 + j * 22), 14, settings.UI_TEXT, True, "topright")
 
 
+class DeviceSelectState(MenuState):
+    """First launch: choose PC or MOBILE controls (changeable later in SETTINGS)."""
+    state_id = StateID.DEVICE_SELECT
+
+    def __init__(self, game: "Game") -> None:
+        super().__init__(game)
+        self.buttons.add(Button((W // 2 - 420, 210, 400, 330), "", lambda: self._pick("pc"),
+                                selected=game.options.input_mode == "pc", hotkey=pygame.K_1))
+        self.buttons.add(Button((W // 2 + 20, 210, 400, 330), "", lambda: self._pick("mobile"),
+                                selected=game.options.input_mode == "mobile", hotkey=pygame.K_2,
+                                accent=(120, 200, 255)))
+
+    def _pick(self, mode: str) -> None:
+        first_time = not self.game.options.input_mode
+        self.game.set_input_mode(mode)
+        if first_time:
+            self.game.change(StateID.MAIN_MENU)
+        else:
+            self.game.pop()
+
+    def draw(self, surface: pygame.Surface) -> None:
+        draw_backdrop(surface, self.time)
+        draw_text(surface, "CHOOSE YOUR DEVICE", (W // 2, 100), 48, settings.UI_ACCENT, True, "center")
+        draw_text(surface, "You can change this later in SETTINGS", (W // 2, 150), 18, settings.UI_TEXT_DIM,
+                  anchor="center")
+        self.buttons.draw(surface)
+        cards = [
+            (self.buttons.buttons[0].rect, "PC", "Mouse + Keyboard", settings.UI_ACCENT,
+             ["WASD  move", "Mouse  aim / fire", "SPACE  dash", "Q / RMB  grenade", "R  reload   1/2/3  switch"]),
+            (self.buttons.buttons[1].rect, "MOBILE", "Touch screen", (120, 200, 255),
+             ["Left stick  move", "Right stick  aim + fire", "DASH / NADE buttons", "R  reload   SWAP  switch",
+              "II  pause"]),
+        ]
+        for rect, title, sub, color, lines in cards:
+            draw_text(surface, title, (rect.centerx, rect.y + 50), 52, color, True, "center")
+            draw_text(surface, sub, (rect.centerx, rect.y + 100), 20, settings.UI_TEXT, anchor="center")
+            for i, line in enumerate(lines):
+                draw_text(surface, line, (rect.centerx, rect.y + 160 + i * 30), 18, settings.UI_TEXT_DIM,
+                          anchor="center")
+
+
 class SettingsState(MenuState):
     state_id = StateID.SETTINGS
 
@@ -183,9 +224,17 @@ class SettingsState(MenuState):
         rows = [("SOUND", o.sound, "sound"), ("SCREEN SHAKE", o.screen_shake, "screen_shake"),
                 ("DAMAGE NUMBERS", o.damage_numbers, "damage_numbers")]
         for i, (label, value, attr) in enumerate(rows):
-            self.buttons.add(Button((W // 2 - 180, 200 + i * 80, 360, 60), f"{label}: {'ON' if value else 'OFF'}",
+            self.buttons.add(Button((W // 2 - 180, 170 + i * 80, 360, 60), f"{label}: {'ON' if value else 'OFF'}",
                                     lambda a=attr: self._toggle(a), selected=value))
+        device = "MOBILE (touch)" if o.input_mode == "mobile" else "PC (mouse + keyboard)"
+        self.buttons.add(Button((W // 2 - 180, 170 + len(rows) * 80, 360, 60), f"DEVICE: {device}",
+                                lambda: self.game.push(StateID.DEVICE_SELECT), font_size=18,
+                                accent=(120, 200, 255)))
         self.buttons.add(Button((W // 2 - 110, 560, 220, 54), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
+
+    def on_enter(self) -> None:
+        pygame.mouse.set_visible(True)
+        self._build()  # refresh after returning from the device screen
 
     def _toggle(self, attr: str) -> None:
         o = self.game.options

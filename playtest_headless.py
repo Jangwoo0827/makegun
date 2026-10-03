@@ -9,7 +9,11 @@ from weapons.weapon_parts import PART_ORDER
 from weapons.weapon import Weapon
 
 random.seed(1)
+import tempfile, settings
+settings.SAVE_FILE = os.path.join(tempfile.gettempdir(), "gun_designer_test_options.json")
+if os.path.exists(settings.SAVE_FILE): os.remove(settings.SAVE_FILE)
 g = Game(headless=True)
+assert g.top.state_id == StateID.DEVICE_SELECT, "first launch asks for the device"
 import tempfile
 g.saves.path = os.path.join(tempfile.gettempdir(), "gun_designer_test_save.json")
 g.saves.delete()
@@ -17,7 +21,6 @@ from game.profile import Profile
 _prof = os.path.join(tempfile.gettempdir(), "gun_designer_test_profile.json")
 if os.path.exists(_prof): os.remove(_prof)
 g.profile = Profile(_prof)  # never touch the real profile.json
-g.change(StateID.MAIN_MENU)
 DT = 1 / 60
 mouse = {"pos": (640, 360), "down": False}
 keys = set()
@@ -40,6 +43,10 @@ def finger(kind, fid, x, y):
 
 def key(k):
     pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=k, mod=0, unicode="")); step()
+
+# 0. device screen: pick PC (key 1) -> main menu, touch stays off
+pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_1, mod=0, unicode="")); g.step(1 / 60)
+assert g.top.state_id == StateID.MAIN_MENU and g.options.input_mode == "pc" and not g.touch.active
 
 # 1. every part combination computes sane stats & fires
 lib = g.library
@@ -291,8 +298,11 @@ assert g.session.stats.max_hp == 100 + 36 and g.session.player.hp == 136, g.sess
 g.end_run()
 print("meta ok")
 
-# --- touch controls: move stick, aim stick fires, buttons, mouse takes over again
+# --- touch controls: ignored in PC mode; MOBILE mode: move stick, aim stick fires, buttons
 g.start_new_run(0); ps = g.play_state; sess = g.session; p = sess.player
+finger("down", 9, 200, 500); step(); finger("up", 9, 200, 500); step()
+assert not g.touch.active and not g.touch._sticks, "PC mode ignores touch"
+g.set_input_mode("mobile")
 ps.waves.countdown = 999  # hold the wave so no enemies interfere
 step(2)
 x0 = p.pos.x
@@ -313,7 +323,10 @@ finger("down", 4, *pause_btn.center); step(); finger("up", 4, *pause_btn.center)
 assert g.top.state_id == StateID.PAUSE
 key(pygame.K_ESCAPE); assert g.top.state_id == StateID.GAME
 pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=(500, 500), rel=(5, 5), buttons=(0, 0, 0), touch=False)); step()
-assert not g.touch.active, "real mouse disables touch mode"
+assert g.touch.active, "mobile mode stays on (chosen, not detected)"
+g.push(StateID.SETTINGS); g.push(StateID.DEVICE_SELECT); click(g.top.buttons.buttons[0])
+assert g.top.state_id == StateID.SETTINGS and g.options.input_mode == "pc" and not g.touch.active
+g.pop()
 print("touch ok")
 
 # --- editor rows: drag scrolls without equipping; tap equips
