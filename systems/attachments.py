@@ -94,7 +94,7 @@ class AttachmentSystem:
                 b.alive = False
         self.slash_time = 0.18
         self.slash_angle = facing
-        self.sound.play("hit", 30)
+        self.sound.play("slash", 60)
         return True
 
     def _launcher(self, player: Player, firing: bool) -> bool:
@@ -150,6 +150,7 @@ class AttachmentSystem:
         for e in targets:
             self.world.effects.arc(player.pos, e.pos)
             self.combat.deal_damage(e, dmg, False, True, s.lifesteal)
+        self.sound.play("zap", 80)
         return True
 
     # -------------------------------------------------------------------- draw

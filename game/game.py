@@ -22,7 +22,7 @@ from game.state import GameState, StateID
 from systems import storage
 from systems.save_manager import SaveManager
 from systems.shop_manager import ShopManager
-from systems.sound import SoundManager
+from systems.sound import MusicManager, SoundManager
 from systems.upgrade_manager import UpgradeManager
 from ui.menus import (DeviceSelectState, GameOverState, IntermissionState, LoadoutState, MainMenuState, PauseState,
                       SettingsState)
@@ -45,6 +45,7 @@ class Options:
     starter_index: int = 0
     input_mode: str = ""  # "pc" | "mobile"; empty until chosen on the device screen
     character: str = "gunner"
+    music: bool = True
 
     @classmethod
     def load(cls) -> "Options":
@@ -77,6 +78,8 @@ class Game:
         self.upgrades: UpgradeManager = UpgradeManager()
         self.sound: SoundManager = SoundManager()
         self.sound.enabled = self.options.sound
+        self.music: MusicManager = MusicManager(self.sound.available)
+        self.music.enabled = self.options.music
 
         self.touch: TouchControls = TouchControls()
         self.saves: SaveManager = SaveManager()

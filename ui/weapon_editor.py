@@ -242,6 +242,7 @@ class WeaponEditorState(GameState):
 
     def update(self, dt: float) -> None:
         self.time += dt
+        self.game.music.play("menu")
         for row in self.rows.values():
             row.update(dt)
         self.message_time = max(0.0, self.message_time - dt)

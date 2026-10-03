@@ -218,6 +218,7 @@ class PlayState(GameState):
             self.stats_timer = 0.5
             self._track_run_stats()
 
+        self.game.music.play("boss" if world.boss() is not None else "battle")
         if player.alive and self.waves.update(dt, len(world.enemies)):
             self._on_wave_cleared()
 
@@ -261,7 +262,7 @@ class PlayState(GameState):
             if self.tutorial is not None:
                 self.tutorial.report("dash")
             self.world.effects.burst(player.pos, (120, 200, 255), 10, 160, 0.3, 3)
-            self.game.sound.play("click")
+            self.game.sound.play("dash")
 
     def grenade_damage(self) -> float:
         p = self.session.player

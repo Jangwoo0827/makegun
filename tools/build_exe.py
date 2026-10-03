@@ -15,7 +15,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SEP = ";" if os.name == "nt" else ":"
 
 # Only ship what the game reads at runtime (placeholders / source art stay out).
-DATA_DIRS = ["data", os.path.join("assets", "images"), os.path.join("assets", "sounds")]
+DATA_DIRS = ["data", os.path.join("assets", "images"), os.path.join("assets", "sounds"),
+             os.path.join("assets", "music")]
 
 
 def main() -> int:

@@ -21,7 +21,8 @@ OUT_ZIP = os.path.join(ROOT, "dist", "gundesigner_web")
 # Only what the game loads at runtime (no exe, placeholders, source art, tests).
 INCLUDE_FILES = ["main.py", "settings.py"]
 INCLUDE_DIRS = ["game", "entities", "weapons", "systems", "ui", "data",
-                os.path.join("assets", "images"), os.path.join("assets", "sounds")]
+                os.path.join("assets", "images"), os.path.join("assets", "sounds"),
+                os.path.join("assets", "music")]
 
 
 def stage_files() -> None:

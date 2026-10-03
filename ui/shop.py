@@ -121,7 +121,7 @@ class ShopState(GameState):
     def _evolve(self) -> None:
         weapon = self.session.weapons[self.weapon_index]
         if self.session.evolve(weapon):
-            self.game.sound.play("boss")
+            self.game.sound.play("evolve")
             self._notify(f"EVOLVED into {weapon.name}!")
         self._build()
 
@@ -136,6 +136,7 @@ class ShopState(GameState):
 
     def update(self, dt: float) -> None:
         self.message_time = max(0.0, self.message_time - dt)
+        self.game.music.play("menu")
 
     # ------------------------------------------------------------------ draw
     def draw(self, surface: pygame.Surface) -> None:

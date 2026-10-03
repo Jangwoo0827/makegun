@@ -54,6 +54,8 @@ class MenuState(GameState):
 
     def update(self, dt: float) -> None:
         self.time += dt
+        if not self.is_overlay:  # full-screen menus (incl. intermission/shop/editor) play the menu track
+            self.game.music.play("menu")
 
 
 class MainMenuState(MenuState):
@@ -266,18 +268,18 @@ class SettingsState(MenuState):
     def _build(self) -> None:
         o = self.game.options
         self.buttons.clear()
-        rows = [("SOUND", o.sound, "sound"), ("SCREEN SHAKE", o.screen_shake, "screen_shake"),
+        rows = [("SOUND", o.sound, "sound"), ("MUSIC", o.music, "music"), ("SCREEN SHAKE", o.screen_shake, "screen_shake"),
                 ("DAMAGE NUMBERS", o.damage_numbers, "damage_numbers")]
         for i, (label, value, attr) in enumerate(rows):
-            self.buttons.add(Button((W // 2 - 180, 170 + i * 80, 360, 60), f"{label}: {'ON' if value else 'OFF'}",
+            self.buttons.add(Button((W // 2 - 180, 140 + i * 68, 360, 56), f"{label}: {'ON' if value else 'OFF'}",
                                     lambda a=attr: self._toggle(a), selected=value))
-        self.buttons.add(Button((W // 2 - 180, 170 + (len(rows) + 1) * 80, 360, 50), "REPLAY TUTORIAL",
+        self.buttons.add(Button((W // 2 - 180, 140 + (len(rows) + 1) * 68, 360, 50), "REPLAY TUTORIAL",
                                 self._replay_tutorial, font_size=16))
         device = "MOBILE (touch)" if o.input_mode == "mobile" else "PC (mouse + keyboard)"
-        self.buttons.add(Button((W // 2 - 180, 170 + len(rows) * 80, 360, 60), f"DEVICE: {device}",
+        self.buttons.add(Button((W // 2 - 180, 140 + len(rows) * 68, 360, 56), f"DEVICE: {device}",
                                 lambda: self.game.push(StateID.DEVICE_SELECT), font_size=18,
                                 accent=(120, 200, 255)))
-        self.buttons.add(Button((W // 2 - 110, 560, 220, 54), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
+        self.buttons.add(Button((W // 2 - 110, 610, 220, 54), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
@@ -291,12 +293,13 @@ class SettingsState(MenuState):
         o = self.game.options
         setattr(o, attr, not getattr(o, attr))
         self.game.sound.enabled = o.sound
+        self.game.music.set_enabled(o.music)
         o.save()
         self._build()
 
     def draw(self, surface: pygame.Surface) -> None:
         draw_backdrop(surface, self.time)
-        draw_text(surface, "SETTINGS", (W // 2, 110), 48, settings.UI_ACCENT, True, "center")
+        draw_text(surface, "SETTINGS", (W // 2, 80), 48, settings.UI_ACCENT, True, "center")
         self.buttons.draw(surface)
 
 

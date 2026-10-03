@@ -27,6 +27,10 @@ SYNTH_DEFS: dict[str, tuple[float, float, float, float, float]] = {
     "buy": (600.0, 1200.0, 0.15, 0.3, 0.0),
     "wave": (300.0, 900.0, 0.4, 0.3, 0.0),
     "boss": (80.0, 60.0, 0.8, 0.5, 0.3),
+    "dash": (300.0, 900.0, 0.12, 0.25, 0.5),
+    "evolve": (300.0, 1200.0, 0.5, 0.3, 0.0),
+    "slash": (2000.0, 500.0, 0.1, 0.3, 0.7),
+    "zap": (1800.0, 400.0, 0.1, 0.25, 0.4),
 }
 
 
@@ -86,3 +90,57 @@ class SoundManager:
         except pygame.error:
             pass
 
+
+
+MUSIC_DIR: str = os.path.join(settings.ASSETS_DIR, "music")
+MUSIC_FADE_MS: int = 700
+
+
+class MusicManager:
+    """Looping background music (assets/music/<track>.wav): "menu", "battle", "boss"."""
+
+    def __init__(self, available: bool) -> None:
+        self.available = available
+        self.enabled: bool = True
+        self.volume: float = 0.45
+        self.current: str | None = None
+
+    def play(self, track: str) -> None:
+        if track == self.current:
+            return
+        self.current = track
+        if not (self.available and self.enabled):
+            return
+        path = os.path.join(MUSIC_DIR, f"{track}.wav")
+        if not os.path.exists(path):
+            return
+        try:
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.set_volume(self.volume)
+            pygame.mixer.music.play(-1, fade_ms=MUSIC_FADE_MS)
+        except pygame.error:
+            pass
+
+    def set_enabled(self, enabled: bool) -> None:
+        self.enabled = enabled
+        if not enabled:
+            self.stop()
+        else:
+            track, self.current = self.current, None
+            if track:
+                self.play(track)
+
+    def set_volume(self, volume: float) -> None:
+        self.volume = max(0.0, min(1.0, volume))
+        if self.available:
+            try:
+                pygame.mixer.music.set_volume(self.volume)
+            except pygame.error:
+                pass
+
+    def stop(self) -> None:
+        if self.available:
+            try:
+                pygame.mixer.music.fadeout(MUSIC_FADE_MS)
+            except pygame.error:
+                pass
