@@ -1,6 +1,6 @@
 """Gun Designer entry point.  Run with:  python main.py
 
-The main loop is async so the same file also runs in the browser via pygbag (itch.io web build).
+The main loop is async so the same file also runs in the browser via pygbag (GitHub Pages web build).
 """
 from __future__ import annotations
 

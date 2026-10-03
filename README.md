@@ -18,15 +18,17 @@ python tools/build_exe.py
 ```
 Produces `dist/GunDesigner.exe`; saves and the profile are stored next to the exe.
 
-## Play in the browser / on mobile (itch.io)
+## Play in the browser / on mobile (GitHub Pages)
+**https://jangwoo0827.github.io/makegun/** — updated automatically on every push to `main`.
+On first launch pick **PC** or **MOBILE**; MOBILE shows touch controls (left = move stick,
+right = aim stick that fires, plus DASH / NADE / R / SWAP / pause). Saves are kept in the browser's local storage.
+
+To build or test the web version locally:
 ```bash
 pip install pygbag
-python tools/build_web.py
+python tools/build_web.py           # -> dist/gundesigner_web.zip
+python tools/build_web.py --serve   # test at http://127.0.0.1:8000 (not "localhost": pygbag dev mode)
 ```
-Produces `dist/gundesigner_web.zip` - upload to itch.io as an **HTML** project
-(viewport 1280x720, "Mobile friendly", landscape, fullscreen button). On phones the game shows
-**touch controls** automatically: left = move stick, right = aim stick (holding it fires), plus
-DASH / NADE / R / SWAP / pause buttons. Saves are kept in the browser's local storage.
 
 ## Automatic builds
 `.github/workflows/build.yml` runs the playtest and builds `GunDesigner.exe` + `gundesigner_web.zip` on every push

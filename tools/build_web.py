@@ -1,10 +1,10 @@
-"""Build the browser (WebAssembly) version for itch.io with pygbag.
+"""Build the browser (WebAssembly) version with pygbag.
 
     pip install pygbag
     python tools/build_web.py
 
-Output: dist/gundesigner_web.zip  -> upload to itch.io as an HTML game
-("This file will be played in the browser"). Works on desktop and mobile browsers.
+Output: dist/gundesigner_web.zip (the same files CI publishes to GitHub Pages,
+https://jangwoo0827.github.io/makegun/). Works on desktop and mobile browsers.
 Use `python tools/build_web.py --serve` to also test it locally at http://localhost:8000
 """
 from __future__ import annotations
@@ -56,7 +56,7 @@ def main() -> int:
     web_dir = os.path.join(STAGE, "build", "web")
     os.makedirs(os.path.dirname(OUT_ZIP), exist_ok=True)
     archive = shutil.make_archive(OUT_ZIP, "zip", web_dir)
-    print("\nBuilt:", archive, "\nUpload this zip to itch.io (Kind of project: HTML).")
+    print("\nBuilt:", archive, "\nPushing to main publishes it to GitHub Pages automatically.")
     return 0
 
 
