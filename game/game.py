@@ -1,7 +1,7 @@
 """Top-level Game object: owns the window, shared resources and the state stack."""
 from __future__ import annotations
 
-import json
+import asyncio
 import os
 from dataclasses import asdict, dataclass
 from typing import Any, Callable
@@ -15,6 +15,7 @@ from game.profile import Profile, RunResult
 from game.stages import StageData, load_stages
 from game.session import RunSession, default_starter
 from game.state import GameState, StateID
+from systems import storage
 from systems.save_manager import SaveManager
 from systems.shop_manager import ShopManager
 from systems.sound import SoundManager
@@ -24,6 +25,7 @@ from ui.menus import (GameOverState, IntermissionState, LoadoutState, MainMenuSt
 from ui.progression import MetaState, StageClearState, StageSelectState, StatsState
 from ui.shop import ShopState
 from ui.fonts import draw_text
+from ui.touch_controls import TouchControls
 from ui.buttons import draw_panel
 from ui.wave_clear import WaveClearState
 from ui.weapon_editor import WeaponEditorState
@@ -40,19 +42,16 @@ class Options:
 
     @classmethod
     def load(cls) -> "Options":
+        raw = storage.read_json(settings.SAVE_FILE)
+        if not isinstance(raw, dict):
+            return cls()
         try:
-            with open(settings.SAVE_FILE, "r", encoding="utf-8") as f:
-                raw: dict[str, Any] = json.load(f)
             return cls(**{k: v for k, v in raw.items() if k in cls.__dataclass_fields__})
-        except (OSError, ValueError, TypeError):
+        except TypeError:
             return cls()
 
     def save(self) -> None:
-        try:
-            with open(settings.SAVE_FILE, "w", encoding="utf-8") as f:
-                json.dump(asdict(self), f, indent=2)
-        except OSError:
-            pass
+        storage.write_json(settings.SAVE_FILE, asdict(self))
 
 
 class Game:
@@ -73,6 +72,7 @@ class Game:
         self.sound: SoundManager = SoundManager()
         self.sound.enabled = self.options.sound
 
+        self.touch: TouchControls = TouchControls()
         self.saves: SaveManager = SaveManager()
         self.profile: Profile = Profile()
         self.stages: list[StageData] = load_stages()
@@ -273,9 +273,11 @@ class Game:
         self.draw()
         pygame.display.flip()
 
-    def run(self) -> None:
+    async def run(self) -> None:
+        """Main loop. Async so the browser build (pygbag) can yield to the page every frame."""
         while self.running:
             dt = min(self.clock.tick(settings.FPS) / 1000.0, settings.MAX_DT)
             self.step(dt)
+            await asyncio.sleep(0)
         self.options.save()
         pygame.quit()

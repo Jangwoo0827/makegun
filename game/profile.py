@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import settings
+from systems import storage
 
 PRESET_SLOTS: int = 4
 PROFILE_VERSION: int = 1
@@ -79,11 +80,7 @@ class Profile:
 
     # ------------------------------------------------------------- persistence
     def load(self) -> None:
-        try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                d = json.load(f)
-        except (OSError, ValueError):
-            return
+        d = storage.read_json(self.path)
         if not isinstance(d, dict):
             return
         self.cores = int(d.get("cores", 0))
@@ -99,13 +96,7 @@ class Profile:
         data = {"version": PROFILE_VERSION, "cores": self.cores, "meta_levels": self.meta_levels,
                 "stats": self.stats, "achievements": sorted(self.achievements),
                 "unlocked_stage": self.unlocked_stage, "stage_best": self.stage_best, "presets": self.presets}
-        tmp = self.path + ".tmp"
-        try:
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=1)
-            os.replace(tmp, self.path)
-        except OSError:
-            pass
+        storage.write_json(self.path, data)
 
     # ------------------------------------------------------------------- meta
     def meta_level(self, meta_id: str) -> int:

@@ -57,6 +57,7 @@ class WeaponEditorState(GameState):
         self.message_time: float = 0.0
         self.buttons = ButtonGroup()
         self.part_buttons: list[tuple[Button, WeaponPart]] = []
+        self.save_mode: bool = False
         self.rows: dict[PartCategory, ScrollRow] = {
             c: ScrollRow(pygame.Rect(PARTS_X, PARTS_Y + i * ROW_H + 26, W - PARTS_X - 20, 52), PART_BTN_W)
             for i, c in enumerate(PART_ORDER)}
@@ -107,11 +108,14 @@ class WeaponEditorState(GameState):
         for i in range(PRESET_SLOTS):
             preset = self.game.profile.preset(i)
             label = preset["name"][:12] if preset else f"EMPTY {i + 1}"
-            btn = Button((PARTS_X + i * 82, H - 54, 76, 44), label, lambda i=i: self._load_preset(i), font_size=11,
-                         accent=settings.RARITY_COLORS["RARE"], enabled=True, selected=False,
+            btn = Button((PARTS_X + i * 68, H - 54, 62, 44), label, lambda i=i: self._preset_clicked(i),
+                         font_size=10, accent=settings.RARITY_COLORS["RARE"], selected=self.save_mode,
                          subtext=f"P{i + 1}")
             self.buttons.add(btn)
             self.preset_buttons.append(btn)
+        self.buttons.add(Button((PARTS_X + 4 * 68, H - 54, 66, 44), "SAVE TO" if not self.save_mode else "CANCEL",
+                                self._toggle_save_mode, font_size=12, accent=settings.UI_ACCENT,
+                                selected=self.save_mode))
         # Footer
         self.buttons.add(Button((W - 420, H - 54, 200, 44), "SAVE WEAPON", self._save, accent=settings.UI_GOOD,
                                 hotkey=pygame.K_RETURN, enabled=self.dirty))
@@ -163,6 +167,19 @@ class WeaponEditorState(GameState):
         self._notify(f"Saved: {target.name}")
         if not stay:
             self._build()
+
+    def _toggle_save_mode(self) -> None:
+        self.save_mode = not self.save_mode
+        if self.save_mode:
+            self._notify("Tap a preset slot to save the current gun there")
+        self._build()
+
+    def _preset_clicked(self, slot: int) -> None:
+        if self.save_mode:
+            self.save_mode = False
+            self._save_preset(slot)
+        else:
+            self._load_preset(slot)
 
     def _save_preset(self, slot: int) -> None:
         name = self.session.builder.auto_name(self.draft)
@@ -315,5 +332,5 @@ class WeaponEditorState(GameState):
         elif self.dirty:
             draw_text(surface, "Unsaved changes - BACK discards them", (PARTS_X, H - 80), 15, settings.UI_ACCENT)
         else:
-            draw_text(surface, "Presets: left-click load, right-click save", (PARTS_X, H - 80), 13,
+            draw_text(surface, "Presets: tap to load - SAVE TO (or right-click) to save", (PARTS_X, H - 80), 13,
                       settings.UI_TEXT_DIM)

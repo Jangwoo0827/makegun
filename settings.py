@@ -8,6 +8,7 @@ import sys
 # When packaged with PyInstaller, read-only game data is unpacked to sys._MEIPASS,
 # while saves must live next to the .exe (a writable location).
 FROZEN: bool = bool(getattr(sys, "frozen", False))
+WEB: bool = sys.platform == "emscripten"  # pygbag browser build
 BASE_DIR: str = getattr(sys, "_MEIPASS", "") if FROZEN else os.path.dirname(os.path.abspath(__file__))
 USER_DIR: str = os.path.dirname(os.path.abspath(sys.executable)) if FROZEN else BASE_DIR
 DATA_DIR: str = os.path.join(BASE_DIR, "data")

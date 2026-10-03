@@ -81,7 +81,9 @@ class MainMenuState(MenuState):
                   ("STATS", lambda: game.push(StateID.STATS),
                    f"{len(game.profile.achievements)}/{len(game.profile.achievement_catalog)} achievements"),
                   ("LOADOUT", lambda: game.push(StateID.LOADOUT), ""),
-                  ("SETTINGS", lambda: game.push(StateID.SETTINGS), ""), ("QUIT", game.quit, "")]
+                  ("SETTINGS", lambda: game.push(StateID.SETTINGS), "")]
+        if not settings.WEB:  # a browser tab can't be quit from inside the game
+            items.append(("QUIT", game.quit, ""))
         for i, (label, cb, sub) in enumerate(items):
             self.buttons.add(Button((x, y + i * 58, 280, 50), label, cb, font_size=20 if sub else 22,  # type: ignore[arg-type]
                                     subtext=sub, selected=(label == "CONTINUE")))

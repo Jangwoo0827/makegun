@@ -11,6 +11,7 @@ from ui.fonts import draw_text
 
 ARROW_W: int = 22
 SCROLL_SPEED: float = 14.0  # smoothing factor
+DRAG_THRESHOLD: int = 12  # px of movement before a press becomes a drag
 
 
 class ScrollRow:
@@ -22,6 +23,8 @@ class ScrollRow:
         self.items: list[Button] = []
         self.scroll: float = 0.0
         self.target: float = 0.0
+        self._press: tuple[int, float] | None = None  # (press x, scroll target at press)
+        self._dragged: bool = False
 
     # ----------------------------------------------------------------- items
     def set_items(self, items: list[Button]) -> None:
@@ -72,6 +75,8 @@ class ScrollRow:
 
     # ---------------------------------------------------------------- events
     def handle_event(self, event: pygame.event.Event, sound: Callable[[], None] | None = None) -> bool:
+        """Wheel / arrows scroll; press-drag scrolls (touch friendly); a press released without
+        dragging clicks the item under it."""
         step = (self.item_w + self.gap) * 2
         if event.type == pygame.MOUSEWHEEL:
             if self.scrollable and self.rect.collidepoint(pygame.mouse.get_pos()):
@@ -87,15 +92,37 @@ class ScrollRow:
             if self.scrollable and right.collidepoint(event.pos):
                 self.scroll_by(step)
                 return True
-            if not self.viewport.collidepoint(event.pos):
-                return False
+            if self.viewport.collidepoint(event.pos):
+                self._press = (event.pos[0], self.target)
+                self._dragged = False
+                return True
+            return False
         if event.type == pygame.MOUSEMOTION:
             for b in self.items:
                 b.hovered = self.viewport.collidepoint(event.pos) and b.rect.collidepoint(event.pos)
-            return False
-        for b in self.items:
-            if b.handle_event(event, sound):
+            if self._press is not None:
+                dx = event.pos[0] - self._press[0]
+                if abs(dx) > DRAG_THRESHOLD:
+                    self._dragged = True
+                if self._dragged and self.scrollable:
+                    self.target = max(0.0, min(self.max_scroll, self._press[1] - dx))
+                    self.scroll = self.target
+                    self._layout()
                 return True
+            return False
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self._press is not None:
+            dragged = self._dragged
+            self._press = None
+            self._dragged = False
+            if not dragged and self.viewport.collidepoint(event.pos):
+                for b in self.items:
+                    if b.rect.collidepoint(event.pos) and b.enabled:
+                        if sound:
+                            sound()
+                        if b.on_click:
+                            b.on_click()
+                        break
+            return True
         return False
 
     def hovered_index(self, pos: tuple[int, int]) -> int | None:

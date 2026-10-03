@@ -1,6 +1,10 @@
-"""Gun Designer entry point.  Run with:  python main.py"""
+"""Gun Designer entry point.  Run with:  python main.py
+
+The main loop is async so the same file also runs in the browser via pygbag (itch.io web build).
+"""
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 
@@ -10,9 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from game.game import Game  # noqa: E402
 
 
-def main() -> None:
-    Game().run()
+async def main() -> None:
+    await Game().run()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

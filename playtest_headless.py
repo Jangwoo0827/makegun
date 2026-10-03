@@ -31,7 +31,12 @@ def step(n=1):
     for _ in range(n): g.step(DT)
 
 def click(btn):
-    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=btn.rect.center)); step()
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=btn.rect.center))
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=btn.rect.center)); step()
+
+def finger(kind, fid, x, y):
+    t = {"down": pygame.FINGERDOWN, "move": pygame.FINGERMOTION, "up": pygame.FINGERUP}[kind]
+    pygame.event.post(pygame.event.Event(t, finger_id=fid, x=x / 1280, y=y / 720, dx=0, dy=0, touch_id=0))
 
 def key(k):
     pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=k, mod=0, unicode="")); step()
@@ -285,6 +290,47 @@ g.start_new_run(0)
 assert g.session.stats.max_hp == 100 + 36 and g.session.player.hp == 136, g.session.stats.max_hp
 g.end_run()
 print("meta ok")
+
+# --- touch controls: move stick, aim stick fires, buttons, mouse takes over again
+g.start_new_run(0); ps = g.play_state; sess = g.session; p = sess.player
+ps.waves.countdown = 999  # hold the wave so no enemies interfere
+step(2)
+x0 = p.pos.x
+finger("down", 1, 200, 500); step(); finger("move", 1, 290, 500); step(40)
+assert g.touch.active and p.pos.x - x0 > 100, ("touch move", p.pos.x - x0)
+finger("up", 1, 290, 500); step()
+shots0 = len(ps.world.bullets)
+p.weapon.ammo = p.weapon.stats.magazine_size
+finger("down", 2, 900, 400); step(); finger("move", 2, 900, 320); step(30)
+assert len(ps.world.bullets) > shots0 or p.weapon.ammo < p.weapon.stats.magazine_size, "aim stick fires"
+assert abs(p.aim_dir.y + 1) < 0.05, p.aim_dir   # aiming up
+finger("up", 2, 900, 320); step()
+dash_btn = [b for b in g.touch.buttons if b.name == "dash"][0]
+finger("down", 3, *dash_btn.center); step(); finger("up", 3, *dash_btn.center)
+assert p.dash_cooldown > 0, "dash button"
+pause_btn = [b for b in g.touch.buttons if b.name == "pause"][0]
+finger("down", 4, *pause_btn.center); step(); finger("up", 4, *pause_btn.center); step()
+assert g.top.state_id == StateID.PAUSE
+key(pygame.K_ESCAPE); assert g.top.state_id == StateID.GAME
+pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=(500, 500), rel=(5, 5), buttons=(0, 0, 0), touch=False)); step()
+assert not g.touch.active, "real mouse disables touch mode"
+print("touch ok")
+
+# --- editor rows: drag scrolls without equipping; tap equips
+g.push(StateID.WEAPON_EDITOR); ed = g.top
+from weapons.weapon_parts import PartCategory as PC
+sess.owned_parts |= set(lib.parts)
+ed._build(); row = ed.rows[PC.RECEIVER]; before = ed.draft.part(PC.RECEIVER).part_id
+y = row.viewport.centery
+pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(row.viewport.right - 40, y)))
+pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=(row.viewport.right - 300, y), rel=(-260, 0), buttons=(1, 0, 0)))
+pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(row.viewport.right - 300, y))); step(2)
+assert row.target > 0 and ed.draft.part(PC.RECEIVER).part_id == before, "drag scrolls only"
+ed.save_mode = False
+saveto = [b for b in g.top.buttons.buttons if b.text == "SAVE TO"][0]; click(saveto)
+click(g.top.preset_buttons[2]); assert g.profile.preset(2) is not None, "SAVE TO saves"
+key(pygame.K_ESCAPE); g.end_run()
+print("editor touch ui ok")
 
 # --- every screen renders
 for sid in (StateID.STAGE_SELECT, StateID.META, StateID.STATS):

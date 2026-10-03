@@ -46,6 +46,7 @@ class PlayState(GameState):
         self.spawner = SpawnManager(game.enemy_db, self.world.walls)
         self.waves = WaveManager(self.spawner, session.stage)
         self.grenades: list[Grenade] = []
+        self._pulse: bool = False  # touch: alternates the trigger so semi-auto guns keep firing
         self.stats_timer: float = 0.0
         self.combat = CombatSystem(self.world, game.sound, self.camera.shake)
         self.collisions = CollisionSystem(self.combat.on_bullet_hit_enemy, self.combat.on_bullet_hit_wall,
@@ -70,6 +71,7 @@ class PlayState(GameState):
 
     def on_exit(self) -> None:
         pygame.mouse.set_visible(True)
+        self.game.touch.reset()
 
     def _start_wave(self) -> None:
         for w in self.session.weapons:
@@ -84,6 +86,8 @@ class PlayState(GameState):
     # --------------------------------------------------------------- events
     def handle_event(self, event: pygame.event.Event) -> None:
         player = self.session.player
+        if self.game.touch.handle_event(event):
+            return
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.game.push(StateID.PAUSE)
@@ -112,14 +116,28 @@ class PlayState(GameState):
                 return
 
         # Input -> player
-        keys = pygame.key.get_pressed()
-        move = pygame.Vector2(keys[pygame.K_d] - keys[pygame.K_a], keys[pygame.K_s] - keys[pygame.K_w])
-        mouse_screen = pygame.mouse.get_pos()
-        mouse_world = self.camera.screen_to_world(mouse_screen)
+        touch = self.game.touch
+        if touch.active:
+            for tap in touch.take_taps():
+                self._on_touch_button(tap)
+                if self.game.top is not self:
+                    return
+            move = touch.move
+            aim = touch.aim
+            aim_dir = aim if aim is not None else self._assist_aim()
+            mouse_world = player.pos + aim_dir * 200
+            if aim is not None and player.weapon.stats.fire_mode in ("single", "burst"):
+                self._pulse = not self._pulse  # tap-fire semi-auto guns at their fire rate
+                trigger = self._pulse
+            else:
+                trigger = aim is not None
+        else:
+            move = self._keyboard_move()
+            mouse_world = self.camera.screen_to_world(pygame.mouse.get_pos())
+            trigger = pygame.mouse.get_pressed()[0]
         if player.alive:
             player.update(dt, move)
             player.aim_at(mouse_world)
-            trigger = pygame.mouse.get_pressed()[0]
             weapon = player.weapon
             was_reloading = weapon.reloading
             for shot in weapon.update(dt, trigger):
@@ -181,10 +199,40 @@ class PlayState(GameState):
             self._on_wave_cleared()
 
     # ---------------------------------------------------------------- skills
+    @staticmethod
+    def _keyboard_move() -> pygame.Vector2:
+        keys = pygame.key.get_pressed()
+        return pygame.Vector2(keys[pygame.K_d] - keys[pygame.K_a], keys[pygame.K_s] - keys[pygame.K_w])
+
+    def _assist_aim(self) -> pygame.Vector2:
+        """Touch: when the aim stick is idle, face the nearest visible enemy (without firing)."""
+        p = self.session.player
+        best, best_d = None, 650.0 ** 2
+        for e in self.world.enemies:
+            d = (e.pos - p.pos).length_squared()
+            if e.alive and d < best_d and e.has_los:
+                best, best_d = e, d
+        if best is not None and best_d > 1:
+            return (best.pos - p.pos).normalize()
+        return p.aim_dir
+
+    def _on_touch_button(self, name: str) -> None:
+        player = self.session.player
+        if name == "dash":
+            self._dash()
+        elif name == "grenade":
+            self._throw_grenade()
+        elif name == "reload":
+            if player.weapon.start_reload():
+                self.game.sound.play("reload")
+        elif name == "switch" and len(player.weapons) > 1:
+            player.switch_weapon((player.current + 1) % len(player.weapons))
+        elif name == "pause":
+            self.game.push(StateID.PAUSE)
+
     def _dash(self) -> None:
         player = self.session.player
-        keys = pygame.key.get_pressed()
-        move = pygame.Vector2(keys[pygame.K_d] - keys[pygame.K_a], keys[pygame.K_s] - keys[pygame.K_w])
+        move = self.game.touch.move if self.game.touch.active else self._keyboard_move()
         if player.try_dash(move):
             self.game.profile.add_stat("total_dashes")
             self.world.effects.burst(player.pos, (120, 200, 255), 10, 160, 0.3, 3)
@@ -198,7 +246,10 @@ class PlayState(GameState):
     def _throw_grenade(self) -> None:
         player = self.session.player
         if player.try_grenade():
-            target = self.camera.screen_to_world(pygame.mouse.get_pos())
+            if self.game.touch.active:
+                target = player.pos + player.aim_dir * settings.GRENADE_RANGE * 0.75
+            else:
+                target = self.camera.screen_to_world(pygame.mouse.get_pos())
             self.grenades.append(Grenade(player.pos, target, self.grenade_damage(), settings.GRENADE_RADIUS))
 
     def _explode_grenade(self, g: Grenade) -> None:
@@ -334,8 +385,13 @@ class PlayState(GameState):
             g.draw(surface, offset)
         player = self.session.player
         self.hud.draw(surface, player, self.session.money, self.waves, self.world.boss())
-        self.hud.draw_skills(surface, player)
-        if self.game.top is self:
+        touch = self.game.touch
+        if touch.active:
+            touch.draw(surface, {"dash": player.dash_cooldown / max(0.01, player.dash_cooldown_max),
+                                 "grenade": player.grenade_cooldown / max(0.01, player.grenade_cooldown_max)})
+        else:
+            self.hud.draw_skills(surface, player)
+        if self.game.top is self and not touch.active:
             self.hud.draw_crosshair(surface, pygame.mouse.get_pos(), player.weapon.stats.spread,
                                     player.weapon.charge_ratio if player.weapon.charge > 0 else 0.0)
         if not player.alive:

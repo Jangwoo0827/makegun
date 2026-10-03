@@ -7,12 +7,11 @@ Phases:
 """
 from __future__ import annotations
 
-import json
-import os
 from dataclasses import asdict, fields
 from typing import Any
 
 import settings
+from systems import storage
 from entities.player_stats import PlayerStats
 from game.session import RunSession
 from game.stages import StageData
@@ -35,20 +34,13 @@ class SaveManager:
 
     def peek(self) -> dict[str, Any] | None:
         """Read the save header without building a session; None if missing/corrupt."""
-        try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except (OSError, ValueError):
-            return None
+        data = storage.read_json(self.path)
         if not isinstance(data, dict) or data.get("version") != SAVE_VERSION:
             return None
         return data
 
     def delete(self) -> None:
-        try:
-            os.remove(self.path)
-        except OSError:
-            pass
+        storage.delete(self.path)
 
     # ------------------------------------------------------------------ save
     def save(self, session: RunSession, phase: str, resume_wave: int) -> bool:
@@ -74,14 +66,7 @@ class SaveManager:
             "pending_upgrades": [u.upgrade_id for u in session.pending_upgrades],
             "last_wave_reward": session.last_wave_reward,
         }
-        tmp = self.path + ".tmp"
-        try:
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=1)
-            os.replace(tmp, self.path)  # atomic: never leaves a half-written save
-            return True
-        except OSError:
-            return False
+        return storage.write_json(self.path, data)
 
     # ------------------------------------------------------------------ load
     def load(self, library: PartLibrary, upgrades: UpgradeManager,
