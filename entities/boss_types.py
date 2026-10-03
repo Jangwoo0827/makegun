@@ -234,6 +234,8 @@ class Architect(Boss):
     def draw(self, surface: pygame.Surface, offset: pygame.Vector2) -> None:
         p = self.pos - offset
         if self._draw_sprite(surface, p):
+            if self.mimic_parts:  # the copied gun is its signature - draw it over the sprite too
+                draw_gun(surface, self.mimic_parts, (p.x, p.y), self.facing, 1.6)
             return
         r = self.radius
         t = pygame.time.get_ticks() / 1000.0
