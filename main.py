@@ -8,6 +8,8 @@ import asyncio
 import os
 import sys
 
+import pygame  # noqa: F401  # pygbag scans main.py imports to decide which wasm packages to load
+
 # Make package imports work no matter where the script is launched from.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

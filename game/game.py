@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Callable
 
@@ -169,6 +170,20 @@ class Game:
         self.last_result = RunResult(cores, victory, new)
         return self.last_result
 
+    def _report_crash(self) -> None:
+        """Print the traceback, show it on screen, and fall back to the main menu."""
+        text = traceback.format_exc()
+        print(text)
+        lines = text.strip().splitlines()[-2:]
+        self.toasts.append(["ERROR - back to menu", lines[-1][:60] if lines else "", 8.0])
+        self.session = None
+        self.play_state = None
+        self.shop = None
+        try:
+            self.change(StateID.MAIN_MENU)
+        except Exception:
+            self.running = False
+
     def toast(self, title: str, subtitle: str = "") -> None:
         self.toasts.append([title, subtitle, 4.0])
         self.sound.play("buy")
@@ -277,7 +292,10 @@ class Game:
         """Main loop. Async so the browser build (pygbag) can yield to the page every frame."""
         while self.running:
             dt = min(self.clock.tick(settings.FPS) / 1000.0, settings.MAX_DT)
-            self.step(dt)
+            try:
+                self.step(dt)
+            except Exception:  # never die silently (the browser would just freeze on the last frame)
+                self._report_crash()
             await asyncio.sleep(0)
         self.options.save()
         pygame.quit()

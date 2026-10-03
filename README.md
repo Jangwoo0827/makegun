@@ -14,6 +14,16 @@ python tools/build_exe.py
 ```
 Produces `dist/GunDesigner.exe`; saves and the profile are stored next to the exe.
 
+## Play in the browser / on mobile (itch.io)
+```bash
+pip install pygbag
+python tools/build_web.py
+```
+Produces `dist/gundesigner_web.zip` - upload to itch.io as an **HTML** project
+(viewport 1280x720, "Mobile friendly", landscape, fullscreen button). On phones the game shows
+**touch controls** automatically: left = move stick, right = aim stick (holding it fires), plus
+DASH / NADE / R / SWAP / pause buttons. Saves are kept in the browser's local storage.
+
 ## Controls
 | Key | Action |
 |---|---|
