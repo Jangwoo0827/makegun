@@ -2,6 +2,8 @@
 
 **v1.2.0** — see [CHANGELOG.md](CHANGELOG.md)
 
+### ▶ [Play in your browser (PC & mobile)](https://jangwoo0827.github.io/makegun/)
+
 2D top-down roguelite shooter where you build your own gun from parts.
 
 ```bash
