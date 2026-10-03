@@ -299,6 +299,34 @@
   "executioner_mod": [
    96,
    48
+  ],
+  "no_attachment": [
+   96,
+   48
+  ],
+  "bayonet": [
+   96,
+   48
+  ],
+  "katana": [
+   96,
+   48
+  ],
+  "grenade_launcher": [
+   96,
+   48
+  ],
+  "flamethrower": [
+   96,
+   48
+  ],
+  "support_drone": [
+   96,
+   48
+  ],
+  "tesla_attachment": [
+   96,
+   48
   ]
  },
  "gun": {

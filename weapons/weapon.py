@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import settings
 from entities.player_stats import PlayerStats
+from weapons.evolution import Evolution, all_evolutions
 from weapons.synergy import active_synergies
 from weapons.weapon_parts import PART_ORDER, PartCategory, WeaponPart
 
@@ -52,6 +53,12 @@ class WeaponStats:
     charge_time: float
     ammo_type: str
     synergies: tuple[str, ...] = ()
+    attachment: str = "none"
+    attach_cooldown: float = 0.0
+    attach_power: float = 0.0
+    attach_range: float = 0.0
+    attach_arc: float = 0.0
+    evolution: str = ""  # active evolution name, "" if none
 
     @property
     def dps(self) -> float:
@@ -79,6 +86,8 @@ class Weapon:
         if missing:
             raise ValueError(f"Weapon '{name}' missing parts: {[c.value for c in missing]}")
         self.name: str = name
+        #: synergy id this weapon evolved through (stays even if parts change; only active while it matches)
+        self.evolution: str | None = None
         self.parts: dict[PartCategory, WeaponPart] = dict(parts)
         self.level: int = level
         self.stats: WeaponStats = self.compute_stats(None)
@@ -105,7 +114,8 @@ class Weapon:
         values = dict(STAT_DEFAULTS)
         values.update(self.parts[PartCategory.RECEIVER].base)
         props: dict[str, object] = {"fire_mode": "auto", "burst_count": 1, "charge_time": 0.0,
-                                    "ammo_type": "normal"}
+                                    "ammo_type": "normal", "attachment": "none", "attach_cooldown": 0.0,
+                                    "attach_power": 0.0, "attach_range": 0.0, "attach_arc": 0.0}
         for category in PART_ORDER:
             part = self.parts[category]
             for key, v in part.add.items():
@@ -119,6 +129,12 @@ class Weapon:
             for key, v in syn.add.items():
                 values[key] = values.get(key, 0.0) + v
             for key, v in syn.mult.items():
+                values[key] = values.get(key, 0.0) * v
+        evolution = self.active_evolution(synergies)
+        if evolution is not None:
+            for key, v in evolution.add.items():
+                values[key] = values.get(key, 0.0) + v
+            for key, v in evolution.mult.items():
                 values[key] = values.get(key, 0.0) * v
 
         values["damage"] *= 1.0 + (self.level - 1) * settings.WEAPON_UPGRADE_DAMAGE_PER_LEVEL
@@ -182,7 +198,22 @@ class Weapon:
             charge_time=float(props["charge_time"]),  # type: ignore[arg-type]
             ammo_type=str(props["ammo_type"]),
             synergies=tuple(syn.name for syn in synergies),
+            attachment=str(props["attachment"]),
+            attach_cooldown=float(props["attach_cooldown"]),  # type: ignore[arg-type]
+            attach_power=float(props["attach_power"]),  # type: ignore[arg-type]
+            attach_range=float(props["attach_range"]),  # type: ignore[arg-type]
+            attach_arc=float(props["attach_arc"]),  # type: ignore[arg-type]
+            evolution=evolution.name if evolution is not None else "",
         )
+
+    def active_evolution(self, synergies: list | None = None) -> "Evolution | None":
+        if self.evolution is None:
+            return None
+        if synergies is None:
+            synergies = active_synergies(p.part_id for p in self.parts.values())
+        if self.evolution not in {s.synergy_id for s in synergies}:
+            return None
+        return all_evolutions().get(self.evolution)
 
     def refresh(self, player: PlayerStats | None) -> None:
         old_mag = self.stats.magazine_size

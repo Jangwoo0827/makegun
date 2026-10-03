@@ -1,0 +1,149 @@
+[
+ {
+  "id": "endless",
+  "mode": "endless",
+  "tier": 4,
+  "name": "ENDLESS",
+  "subtitle": "How long can your gun last?",
+  "waves": 0,
+  "hp_mult": 2.0,
+  "damage_mult": 1.5,
+  "reward_mult": 1.5,
+  "pool_offset": 3,
+  "affix_chance": 0.1,
+  "bosses": {},
+  "floor": [
+   16,
+   12,
+   20
+  ],
+  "grid": [
+   32,
+   24,
+   40
+  ],
+  "wall": [
+   70,
+   50,
+   90
+  ],
+  "wall_edge": [
+   150,
+   110,
+   190
+  ],
+  "obstacles": [
+   [
+    -620,
+    -380,
+    140,
+    140
+   ],
+   [
+    480,
+    -380,
+    140,
+    140
+   ],
+   [
+    -620,
+    240,
+    140,
+    140
+   ],
+   [
+    480,
+    240,
+    140,
+    140
+   ],
+   [
+    -120,
+    -560,
+    240,
+    60
+   ],
+   [
+    -120,
+    500,
+    240,
+    60
+   ]
+  ]
+ },
+ {
+  "id": "bossrush",
+  "mode": "bossrush",
+  "tier": 4,
+  "name": "BOSS RUSH",
+  "subtitle": "Four bosses back to back. Beat the clock.",
+  "waves": 4,
+  "hp_mult": 2.5,
+  "damage_mult": 1.6,
+  "reward_mult": 2.0,
+  "pool_offset": 10,
+  "affix_chance": 0.0,
+  "start_money": 1500,
+  "start_parts": 10,
+  "bosses": {
+   "1": [
+    "boss"
+   ],
+   "2": [
+    "titan"
+   ],
+   "3": [
+    "broodmother"
+   ],
+   "4": [
+    "warden"
+   ]
+  },
+  "floor": [
+   24,
+   10,
+   10
+  ],
+  "grid": [
+   44,
+   20,
+   20
+  ],
+  "wall": [
+   90,
+   40,
+   40
+  ],
+  "wall_edge": [
+   190,
+   80,
+   80
+  ],
+  "obstacles": [
+   [
+    -700,
+    -420,
+    100,
+    100
+   ],
+   [
+    600,
+    -420,
+    100,
+    100
+   ],
+   [
+    -700,
+    320,
+    100,
+    100
+   ],
+   [
+    600,
+    320,
+    100,
+    100
+   ]
+  ]
+ }
+]

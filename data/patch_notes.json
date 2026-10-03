@@ -1,0 +1,31 @@
+[
+ {
+  "version": "1.2.0",
+  "date": "2026-10-03",
+  "notes": [
+   "3 new stages: WASTELAND, THE SPIRE, OMEGA (8 stages total)",
+   "Ascension 1-10: clear the final stage to unlock harder runs with bigger core rewards",
+   "New modes: ENDLESS (infinite waves) and BOSS RUSH (4 bosses, timed) - unlocked by clearing THE CORE",
+   "6 playable characters, unlocked with cores in LOADOUT",
+   "New part slot ATTACHMENT: Bayonet, Katana, Grenade Launcher, Flamethrower, Support Drone, Tesla Coil",
+   "Weapon evolution: get a synergy weapon to Lv.8 and EVOLVE it in the shop (15 evolutions)",
+   "3 new synergies, 7 new achievements, version number and patch notes"
+  ]
+ },
+ {
+  "version": "1.1.0",
+  "date": "2026-10-03",
+  "notes": [
+   "Web / mobile build with touch controls",
+   "Device selection (PC / MOBILE)",
+   "Saves kept in the browser"
+  ]
+ },
+ {
+  "version": "1.0.0",
+  "date": "2026-10-02",
+  "notes": [
+   "5 stages, meta progression, 4 bosses, elite affixes, synergies, dash and grenade, achievements, weapon presets"
+  ]
+ }
+]

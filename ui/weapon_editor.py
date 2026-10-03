@@ -23,7 +23,8 @@ if TYPE_CHECKING:
     from game.game import Game
 
 W, H = settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT
-PARTS_X, PARTS_Y, ROW_H = 520, 64, 90
+PARTS_X, PARTS_Y, ROW_H = 520, 60, 80
+ROW_BTN_H: int = 46
 PART_BTN_W: int = 128
 
 # (label, getter, higher_is_better, format)
@@ -59,7 +60,7 @@ class WeaponEditorState(GameState):
         self.part_buttons: list[tuple[Button, WeaponPart]] = []
         self.save_mode: bool = False
         self.rows: dict[PartCategory, ScrollRow] = {
-            c: ScrollRow(pygame.Rect(PARTS_X, PARTS_Y + i * ROW_H + 26, W - PARTS_X - 20, 52), PART_BTN_W)
+            c: ScrollRow(pygame.Rect(PARTS_X, PARTS_Y + i * ROW_H + 24, W - PARTS_X - 20, ROW_BTN_H), PART_BTN_W)
             for i, c in enumerate(PART_ORDER)}
         self.time: float = 0.0
         self._build()
@@ -91,7 +92,7 @@ class WeaponEditorState(GameState):
             for part in s.library.by_category[category]:
                 owned = part.part_id in s.owned_parts
                 name = part.name.replace(" Receiver", "").replace(" Barrel", "").replace(" Magazine", "")
-                btn = Button((0, 0, PART_BTN_W, 52), name if owned else "LOCKED", lambda p=part: self._equip(p),
+                btn = Button((0, 0, PART_BTN_W, ROW_BTN_H), name if owned else "LOCKED", lambda p=part: self._equip(p),
                              font_size=14, accent=settings.RARITY_COLORS[part.rarity.value], enabled=owned,
                              selected=self.draft.part(category).part_id == part.part_id,
                              subtext=part.rarity.value.title() if owned else name)
@@ -321,7 +322,7 @@ class WeaponEditorState(GameState):
         for row, category in enumerate(PART_ORDER):
             owned = len(self.session.owned_in(category))
             total = len(self.session.library.by_category[category])
-            draw_text(surface, f"{category.label.upper()}  {owned}/{total}", (PARTS_X, PARTS_Y + row * ROW_H + 6),
+            draw_text(surface, f"{category.label.upper()}  {owned}/{total}", (PARTS_X, PARTS_Y + row * ROW_H + 4),
                       16, settings.UI_TEXT_DIM, True)
         draw_text(surface, "BLUEPRINTS", (20, 352), 12, settings.UI_TEXT_DIM, True)
         self.buttons.draw(surface)

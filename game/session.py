@@ -6,7 +6,10 @@ import pygame
 import settings
 from entities.player import Player
 from entities.player_stats import PlayerStats
+from game.ascension import AscensionMods
+from game.characters import DEFAULT_CHARACTER, Character
 from game.stages import StageData
+from weapons.evolution import Evolution, available_evolution
 from systems.upgrade_manager import Upgrade, UpgradeManager
 from weapons.weapon import Weapon
 from weapons.weapon_builder import STARTER_PRESETS, WeaponBuilder, WeaponPreset
@@ -40,6 +43,53 @@ class RunSession:
         #: per-run counters used by achievements (see data/achievements.json)
         self.run_stats: dict[str, float] = {}
         self.run_recorded: bool = False
+        self.ascension: AscensionMods = AscensionMods()
+        self.character: str = DEFAULT_CHARACTER
+        self.run_time: float = 0.0  # seconds spent in active waves (boss rush timer)
+
+    def apply_character(self, character: Character) -> None:
+        self.character = character.char_id
+        self.player.color = character.color
+        if character.effects:
+            self.stats.apply_effects(character.effects)
+        if character.start_attachment and character.start_attachment in self.library.parts:
+            self.owned_parts.add(character.start_attachment)
+            self.player.weapon.set_part(self.library.get(character.start_attachment))
+        self.player.hp = self.stats.max_hp
+        self.player.refresh_weapons()
+
+    def apply_ascension(self, mods: AscensionMods) -> None:
+        self.ascension = mods
+        self.money = max(0, self.money + mods.start_money)
+        self.stats.heal_multiplier = mods.heal
+
+    def apply_stage_start(self) -> None:
+        """Mode bonuses (boss rush starts rich so you can build a gun first)."""
+        self.money += self.stage.start_money
+        for _ in range(self.stage.start_parts):
+            part = self.library.random_part(self.owned_parts, 12, 0.5)
+            if part is not None:
+                self.owned_parts.add(part.part_id)
+
+    def price(self, base: int) -> int:
+        """Shop price after ascension inflation."""
+        return int(base * self.ascension.shop_price)
+
+    def evolution_for(self, weapon: Weapon) -> "Evolution | None":
+        """The evolution this weapon can take right now, if any."""
+        if weapon.evolution is not None or weapon.level < settings.EVOLVE_LEVEL:
+            return None
+        return available_evolution(p.part_id for p in weapon.parts.values())
+
+    def evolve(self, weapon: Weapon) -> bool:
+        evo = self.evolution_for(weapon)
+        if evo is None:
+            return False
+        weapon.evolution = evo.synergy_id
+        self.player.refresh_weapons()
+        weapon.name = self.builder.auto_name(weapon)
+        self.bump("run_evolutions", self.run_stats.get("run_evolutions", 0) + 1)
+        return True
 
     def apply_meta(self, effects: dict[str, float], money: int, parts: int) -> None:
         """Permanent profile bonuses applied at the start of a run."""
@@ -91,7 +141,7 @@ class RunSession:
     def next_slot_price(self) -> int | None:
         if self.slots_unlocked >= settings.MAX_WEAPON_SLOTS:
             return None
-        return settings.SLOT_PRICES[self.slots_unlocked]
+        return self.price(settings.SLOT_PRICES[self.slots_unlocked])
 
     def unlock_slot(self) -> bool:
         price = self.next_slot_price()
@@ -116,7 +166,7 @@ class RunSession:
         self.player.refresh_weapons()
 
     def weapon_upgrade_cost(self, weapon: Weapon) -> int:
-        return int(settings.WEAPON_UPGRADE_BASE_COST * (1.45 ** (weapon.level - 1)))
+        return self.price(int(settings.WEAPON_UPGRADE_BASE_COST * (1.45 ** (weapon.level - 1))))
 
     def upgrade_weapon(self, weapon: Weapon) -> bool:
         if weapon.level >= settings.WEAPON_MAX_LEVEL or not self.spend(self.weapon_upgrade_cost(weapon)):

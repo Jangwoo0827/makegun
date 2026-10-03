@@ -49,11 +49,11 @@ class ShopManager:
 
     @property
     def reroll_cost(self) -> int:
-        return settings.SHOP_REROLL_COST + settings.SHOP_REROLL_COST_STEP * self.rerolls
+        return self.session.price(settings.SHOP_REROLL_COST + settings.SHOP_REROLL_COST_STEP * self.rerolls)
 
     def upgrade_price(self, upgrade: Upgrade) -> int:
         owned = UpgradeManager.stack_counts(self.session.upgrades_taken).get(upgrade.upgrade_id, 0)
-        return int(UPGRADE_PRICES[upgrade.rarity] * settings.SHOP_UPGRADE_PRICE_GROWTH ** owned)
+        return self.session.price(int(UPGRADE_PRICES[upgrade.rarity] * settings.SHOP_UPGRADE_PRICE_GROWTH ** owned))
 
     def generate(self, wave: int) -> None:
         s = self.session
@@ -65,7 +65,7 @@ class ShopManager:
             if part is None:
                 break
             exclude.add(part.part_id)
-            price = max(60, int(part.price * (1.0 + wave * 0.02)))
+            price = s.price(max(60, int(part.price * (1.0 + wave * 0.02))))
             offers.append(ShopOffer(OfferKind.PART, part.name, part.category.label, part.description,
                                     price, part.rarity, part_id=part.part_id))
         for up in s.upgrade_manager.roll_choices(wave, 2, s.stats.luck, s.upgrades_taken):
@@ -74,10 +74,10 @@ class ShopManager:
         while len(offers) < settings.SHOP_OFFER_COUNT:
             if random.random() < 0.5:
                 offers.append(ShopOffer(OfferKind.HEALTH, "MED KIT", "Consumable", "Restore 50% HP",
-                                        settings.HEALTH_ITEM_PRICE, Rarity.COMMON))
+                                        s.price(settings.HEALTH_ITEM_PRICE), Rarity.COMMON))
             else:
                 offers.append(ShopOffer(OfferKind.AMMO, "AMMO CRATE", "Consumable", "Refill all reserve ammo",
-                                        settings.AMMO_ITEM_PRICE, Rarity.COMMON))
+                                        s.price(settings.AMMO_ITEM_PRICE), Rarity.COMMON))
         self.offers = offers[: settings.SHOP_OFFER_COUNT]
 
     def reroll(self) -> bool:

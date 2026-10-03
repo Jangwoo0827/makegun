@@ -26,6 +26,7 @@ class StateID(Enum):
     META = auto()
     STATS = auto()
     DEVICE_SELECT = auto()
+    PATCH_NOTES = auto()
 
 
 class GameState:

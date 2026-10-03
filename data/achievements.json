@@ -1,19 +1,170 @@
 {
-  "first_blood":   {"name": "First Blood",      "description": "Kill your first enemy",            "stat": "total_kills",     "goal": 1,      "reward": 5},
-  "exterminator":  {"name": "Exterminator",     "description": "Kill 1,000 enemies (lifetime)",    "stat": "total_kills",     "goal": 1000,   "reward": 30},
-  "genocide":      {"name": "Unstoppable",      "description": "Kill 10,000 enemies (lifetime)",   "stat": "total_kills",     "goal": 10000,  "reward": 100},
-  "rampage":       {"name": "Rampage",          "description": "Kill 300 enemies in one run",      "stat": "run_kills",       "goal": 300,    "reward": 25},
-  "boss_slayer":   {"name": "Boss Slayer",      "description": "Defeat a boss",                    "stat": "total_boss_kills","goal": 1,      "reward": 15},
-  "boss_hunter":   {"name": "Boss Hunter",      "description": "Defeat 10 bosses (lifetime)",      "stat": "total_boss_kills","goal": 10,     "reward": 50},
-  "stage_1":       {"name": "Out of the Woods", "description": "Clear OUTSKIRTS",                  "stat": "stages_cleared",  "goal": 1,      "reward": 20},
-  "stage_3":       {"name": "Hive Mind",        "description": "Clear THE HIVE",                   "stat": "stages_cleared",  "goal": 3,      "reward": 60},
-  "stage_5":       {"name": "Gun Designer",     "description": "Clear THE CORE",                   "stat": "stages_cleared",  "goal": 5,      "reward": 200},
-  "rich":          {"name": "Loaded",           "description": "Hold $5,000 at once",              "stat": "run_money_peak",  "goal": 5000,   "reward": 20},
-  "tinkerer":      {"name": "Tinkerer",         "description": "Own 30 parts in one run",          "stat": "run_parts",       "goal": 30,     "reward": 25},
-  "synergist":     {"name": "Synergist",        "description": "Activate a part synergy",          "stat": "run_synergies",   "goal": 1,      "reward": 15},
-  "combo_master":  {"name": "Combo Master",     "description": "Have 3 synergies active at once",  "stat": "run_synergies",   "goal": 3,      "reward": 60},
-  "dasher":        {"name": "Untouchable",      "description": "Dash 200 times (lifetime)",        "stat": "total_dashes",    "goal": 200,    "reward": 15},
-  "grenadier":     {"name": "Grenadier",        "description": "Kill 5 enemies with one grenade",  "stat": "best_grenade_kills", "goal": 5,  "reward": 25},
-  "affix_hunter":  {"name": "Elite Hunter",     "description": "Kill 50 affixed elites (lifetime)","stat": "total_affix_kills", "goal": 50,  "reward": 30},
-  "veteran":       {"name": "Veteran",          "description": "Finish 10 runs",                   "stat": "runs",            "goal": 10,     "reward": 20}
+ "first_blood": {
+  "name": "First Blood",
+  "description": "Kill your first enemy",
+  "stat": "total_kills",
+  "goal": 1,
+  "reward": 5
+ },
+ "exterminator": {
+  "name": "Exterminator",
+  "description": "Kill 1,000 enemies (lifetime)",
+  "stat": "total_kills",
+  "goal": 1000,
+  "reward": 30
+ },
+ "genocide": {
+  "name": "Unstoppable",
+  "description": "Kill 10,000 enemies (lifetime)",
+  "stat": "total_kills",
+  "goal": 10000,
+  "reward": 100
+ },
+ "rampage": {
+  "name": "Rampage",
+  "description": "Kill 300 enemies in one run",
+  "stat": "run_kills",
+  "goal": 300,
+  "reward": 25
+ },
+ "boss_slayer": {
+  "name": "Boss Slayer",
+  "description": "Defeat a boss",
+  "stat": "total_boss_kills",
+  "goal": 1,
+  "reward": 15
+ },
+ "boss_hunter": {
+  "name": "Boss Hunter",
+  "description": "Defeat 10 bosses (lifetime)",
+  "stat": "total_boss_kills",
+  "goal": 10,
+  "reward": 50
+ },
+ "stage_1": {
+  "name": "Out of the Woods",
+  "description": "Clear OUTSKIRTS",
+  "stat": "stages_cleared",
+  "goal": 1,
+  "reward": 20
+ },
+ "stage_3": {
+  "name": "Hive Mind",
+  "description": "Clear THE HIVE",
+  "stat": "stages_cleared",
+  "goal": 3,
+  "reward": 60
+ },
+ "stage_5": {
+  "name": "Gun Designer",
+  "description": "Clear THE CORE",
+  "stat": "stages_cleared",
+  "goal": 5,
+  "reward": 200
+ },
+ "rich": {
+  "name": "Loaded",
+  "description": "Hold $5,000 at once",
+  "stat": "run_money_peak",
+  "goal": 5000,
+  "reward": 20
+ },
+ "tinkerer": {
+  "name": "Tinkerer",
+  "description": "Own 30 parts in one run",
+  "stat": "run_parts",
+  "goal": 30,
+  "reward": 25
+ },
+ "synergist": {
+  "name": "Synergist",
+  "description": "Activate a part synergy",
+  "stat": "run_synergies",
+  "goal": 1,
+  "reward": 15
+ },
+ "combo_master": {
+  "name": "Combo Master",
+  "description": "Have 3 synergies active at once",
+  "stat": "run_synergies",
+  "goal": 3,
+  "reward": 60
+ },
+ "dasher": {
+  "name": "Untouchable",
+  "description": "Dash 200 times (lifetime)",
+  "stat": "total_dashes",
+  "goal": 200,
+  "reward": 15
+ },
+ "grenadier": {
+  "name": "Grenadier",
+  "description": "Kill 5 enemies with one grenade",
+  "stat": "best_grenade_kills",
+  "goal": 5,
+  "reward": 25
+ },
+ "affix_hunter": {
+  "name": "Elite Hunter",
+  "description": "Kill 50 affixed elites (lifetime)",
+  "stat": "total_affix_kills",
+  "goal": 50,
+  "reward": 30
+ },
+ "veteran": {
+  "name": "Veteran",
+  "description": "Finish 10 runs",
+  "stat": "runs",
+  "goal": 10,
+  "reward": 20
+ },
+ "stage_8": {
+  "name": "Omega Point",
+  "description": "Clear OMEGA",
+  "stat": "stages_cleared",
+  "goal": 8,
+  "reward": 300
+ },
+ "ascended": {
+  "name": "Ascended",
+  "description": "Clear the final stage on Ascension 1+",
+  "stat": "best_ascension_clear",
+  "goal": 1,
+  "reward": 100
+ },
+ "apocalypse": {
+  "name": "Apocalypse Survivor",
+  "description": "Clear the final stage on Ascension 10",
+  "stat": "best_ascension_clear",
+  "goal": 10,
+  "reward": 500
+ },
+ "endless_30": {
+  "name": "Marathon",
+  "description": "Reach wave 30 in Endless",
+  "stat": "endless_best",
+  "goal": 30,
+  "reward": 60
+ },
+ "boss_rush": {
+  "name": "Rush Hour",
+  "description": "Clear Boss Rush",
+  "stat": "bossrush_clears",
+  "goal": 1,
+  "reward": 80
+ },
+ "evolved": {
+  "name": "Evolution",
+  "description": "Evolve a weapon",
+  "stat": "run_evolutions",
+  "goal": 1,
+  "reward": 40
+ },
+ "collector": {
+  "name": "Full Roster",
+  "description": "Unlock every character",
+  "stat": "characters_unlocked",
+  "goal": 6,
+  "reward": 50
+ }
 }

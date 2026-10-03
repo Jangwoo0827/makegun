@@ -1,0 +1,83 @@
+[
+ {
+  "level": 1,
+  "name": "Tougher Hordes",
+  "description": "Enemies +15% HP",
+  "effects": {
+   "enemy_hp": 0.15
+  }
+ },
+ {
+  "level": 2,
+  "name": "Elite Patrols",
+  "description": "+10% elite chance on every stage",
+  "effects": {
+   "affix_add": 0.1
+  }
+ },
+ {
+  "level": 3,
+  "name": "Inflation",
+  "description": "Shop prices +20%",
+  "effects": {
+   "shop_price": 0.2
+  }
+ },
+ {
+  "level": 4,
+  "name": "Sharper Teeth",
+  "description": "Enemies +15% damage",
+  "effects": {
+   "enemy_damage": 0.15
+  }
+ },
+ {
+  "level": 5,
+  "name": "Boss Armor",
+  "description": "Bosses +30% HP",
+  "effects": {
+   "boss_hp": 0.3
+  }
+ },
+ {
+  "level": 6,
+  "name": "Empty Pockets",
+  "description": "Start with $100 less",
+  "effects": {
+   "start_money": -100
+  }
+ },
+ {
+  "level": 7,
+  "name": "Scarce Medicine",
+  "description": "All healing -30%",
+  "effects": {
+   "heal": -0.3
+  }
+ },
+ {
+  "level": 8,
+  "name": "Swift Death",
+  "description": "Enemies 10% faster",
+  "effects": {
+   "enemy_speed": 0.1
+  }
+ },
+ {
+  "level": 9,
+  "name": "Swarm",
+  "description": "+25% enemies per wave",
+  "effects": {
+   "enemy_count": 0.25
+  }
+ },
+ {
+  "level": 10,
+  "name": "Apocalypse",
+  "description": "Enemies +25% HP and damage",
+  "effects": {
+   "enemy_hp": 0.25,
+   "enemy_damage": 0.25
+  }
+ }
+]

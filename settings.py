@@ -20,6 +20,7 @@ RUN_SAVE_FILE: str = os.path.join(USER_DIR, "save_run.json")
 
 # --- Display -------------------------------------------------------------
 TITLE: str = "GUN DESIGNER"
+VERSION: str = "1.2.0"
 SCREEN_WIDTH: int = 1280
 SCREEN_HEIGHT: int = 720
 FPS: int = 60
@@ -137,6 +138,7 @@ UPGRADE_MAX_STACKS: dict[str, int] = {"COMMON": 5, "UNCOMMON": 4, "RARE": 3, "EP
 SHOP_UPGRADE_PRICE_GROWTH: float = 1.6   # price x this per copy already owned
 SHOP_REROLL_COST_STEP: int = 20          # each reroll in the same visit costs this much more
 WEAPON_MAX_LEVEL: int = 25
+EVOLVE_LEVEL: int = 8  # weapon level needed to evolve a synergy weapon
 # Enemies grow exponentially after this wave so endless runs stay dangerous.
 LATE_WAVE_START: int = 25
 LATE_WAVE_HP_GROWTH: float = 1.06

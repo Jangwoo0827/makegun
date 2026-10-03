@@ -13,6 +13,8 @@ import settings
 from entities.enemy import EnemyData, load_enemy_data
 from game.play_state import PlayState
 from game.profile import Profile, RunResult
+from game.ascension import ascension_mods
+from game.characters import Character, get_character
 from game.stages import StageData, load_stages
 from game.session import RunSession, default_starter
 from game.state import GameState, StateID
@@ -23,7 +25,7 @@ from systems.sound import SoundManager
 from systems.upgrade_manager import UpgradeManager
 from ui.menus import (DeviceSelectState, GameOverState, IntermissionState, LoadoutState, MainMenuState, PauseState,
                       SettingsState)
-from ui.progression import MetaState, StageClearState, StageSelectState, StatsState
+from ui.progression import MetaState, PatchNotesState, StageClearState, StageSelectState, StatsState
 from ui.shop import ShopState
 from ui.fonts import draw_text
 from ui.touch_controls import TouchControls
@@ -41,6 +43,7 @@ class Options:
     damage_numbers: bool = True
     starter_index: int = 0
     input_mode: str = ""  # "pc" | "mobile"; empty until chosen on the device screen
+    character: str = "gunner"
 
     @classmethod
     def load(cls) -> "Options":
@@ -78,6 +81,8 @@ class Game:
         self.saves: SaveManager = SaveManager()
         self.profile: Profile = Profile()
         self.stages: list[StageData] = load_stages()
+        self.modes: dict[str, StageData] = {
+            s.stage_id: s for s in load_stages(os.path.join(settings.DATA_DIR, "modes.json"))}
         self.last_result: RunResult | None = None
         #: [title, subtitle, seconds left]
         self.toasts: list[list] = []
@@ -101,6 +106,7 @@ class Game:
             StateID.META: lambda: MetaState(self),
             StateID.STATS: lambda: StatsState(self),
             StateID.DEVICE_SELECT: lambda: DeviceSelectState(self),
+            StateID.PATCH_NOTES: lambda: PatchNotesState(self),
         }
         self.touch.active = self.options.input_mode == "mobile"
         self.change(StateID.MAIN_MENU if self.options.input_mode else StateID.DEVICE_SELECT)
@@ -115,21 +121,43 @@ class Game:
         idx = self.options.starter_index
         return STARTER_PRESETS[idx] if 0 <= idx < len(STARTER_PRESETS) else default_starter()
 
-    def start_new_run(self, stage_index: int | None = None) -> None:
-        if stage_index is None:  # "try again" replays the last stage
-            stage_index = self.session.stage.index if self.session is not None else 0
-        stage = self.stages[max(0, min(stage_index, len(self.stages) - 1))]
+    @property
+    def all_stages(self) -> list[StageData]:
+        return self.stages + list(self.modes.values())
+
+    def selected_character(self) -> Character:
+        cid = self.options.character if self.options.character in self.profile.unlocked_characters else "gunner"
+        return get_character(cid)
+
+    def start_new_run(self, stage_index: int | None = None, stage_id: str | None = None) -> None:
+        if stage_id is not None:
+            stage = self.modes.get(stage_id) or next(s for s in self.stages if s.stage_id == stage_id)
+        elif stage_index is None:  # "try again" replays the last stage / mode
+            stage = self.session.stage if self.session is not None else self.stages[0]
+        else:
+            stage = self.stages[max(0, min(stage_index, len(self.stages) - 1))]
         self.saves.delete()
         self.session = RunSession(self.library, self.upgrades, self.starter_preset(), stage)
         self.session.apply_meta(*self.profile.meta_bonuses())
+        self.session.apply_character(self.selected_character())
+        if stage.mode == "normal":
+            self.session.apply_ascension(ascension_mods(self.profile.selected_ascension))
+        self.session.apply_stage_start()
         self.last_result = None
         self.shop = None
-        self.play_state = PlayState(self)
-        self.change(StateID.GAME)
+        bossrush = stage.mode == "bossrush"
+        self.play_state = PlayState(self, start_wave=not bossrush)
+        if bossrush:  # gear up in the shop / editor before the first boss
+            while self.stack:
+                self.stack.pop().on_exit()
+            self.stack.append(self.play_state)
+            self.push(StateID.INTERMISSION)
+        else:
+            self.change(StateID.GAME)
 
     def continue_run(self) -> bool:
         """Load the saved run. Returns False if there is no valid save."""
-        loaded = self.saves.load(self.library, self.upgrades, self.stages)
+        loaded = self.saves.load(self.library, self.upgrades, self.all_stages)
         if loaded is None:
             return False
         self.session, phase = loaded
@@ -165,7 +193,9 @@ class Game:
         s.run_recorded = True
         waves_cleared = s.stage.waves if victory else max(0, s.wave_reached - 1)
         cores = self.profile.record_run_end(s.stage.index, s.stage.stage_id, s.wave_reached, waves_cleared,
-                                            s.kills, s.boss_kills, victory, len(self.stages))
+                                            s.kills, s.boss_kills, victory, len(self.stages), mode=s.stage.mode,
+                                            ascension=s.ascension.level, core_bonus=s.ascension.core_bonus,
+                                            run_time=s.run_time)
         new = self.profile.check_achievements(s.run_stats)
         for a in new:
             self.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")

@@ -1,0 +1,89 @@
+{
+ "gunner": {
+  "name": "GUNNER",
+  "description": "Balanced soldier. No strengths, no weaknesses.",
+  "cost": 0,
+  "color": [
+   120,
+   220,
+   255
+  ],
+  "effects": {}
+ },
+ "scout": {
+  "name": "SCOUT",
+  "description": "Dash recharges 40% faster, +15% speed, -15 HP.",
+  "cost": 60,
+  "color": [
+   120,
+   255,
+   180
+  ],
+  "effects": {
+   "dash_cooldown_multiplier": -0.4,
+   "move_speed_multiplier": 0.15,
+   "max_hp": -15
+  }
+ },
+ "demolitionist": {
+  "name": "DEMOLITIONIST",
+  "description": "Grenades recharge 40% faster, hit 60% harder. +20 blast radius.",
+  "cost": 80,
+  "color": [
+   255,
+   150,
+   80
+  ],
+  "effects": {
+   "grenade_cooldown_multiplier": -0.4,
+   "grenade_damage_multiplier": 0.6,
+   "explosion_bonus": 20,
+   "max_hp": -10
+  }
+ },
+ "juggernaut": {
+  "name": "JUGGERNAUT",
+  "description": "+60 HP and 12% damage reduction, but 12% slower.",
+  "cost": 100,
+  "color": [
+   200,
+   160,
+   120
+  ],
+  "effects": {
+   "max_hp": 60,
+   "damage_reduction": 0.12,
+   "move_speed_multiplier": -0.12
+  }
+ },
+ "duelist": {
+  "name": "DUELIST",
+  "description": "Starts with a KATANA. +10% crit chance, +50% crit damage.",
+  "cost": 120,
+  "color": [
+   255,
+   100,
+   140
+  ],
+  "effects": {
+   "crit_chance": 0.1,
+   "crit_damage": 0.5
+  },
+  "start_attachment": "katana"
+ },
+ "engineer": {
+  "name": "ENGINEER",
+  "description": "Starts with a SUPPORT DRONE. -20% reload time, +10% money.",
+  "cost": 120,
+  "color": [
+   255,
+   220,
+   90
+  ],
+  "effects": {
+   "reload_multiplier": -0.2,
+   "money_multiplier": 0.1
+  },
+  "start_attachment": "support_drone"
+ }
+}

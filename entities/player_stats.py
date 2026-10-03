@@ -40,6 +40,7 @@ class PlayerStats:
     dash_cooldown_multiplier: float = 1.0
     grenade_cooldown_multiplier: float = 1.0
     grenade_damage_multiplier: float = 1.0
+    heal_multiplier: float = 1.0
 
     def apply_effects(self, effects: dict[str, float]) -> None:
         """Additively apply an upgrade's effect dict. Unknown keys raise KeyError."""

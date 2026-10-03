@@ -24,6 +24,7 @@ class SpawnManager:
         self.interval: float = settings.SPAWN_INTERVAL
         self.reward_mult: float = 1.0
         self.affix_chance: float = 0.0
+        self.boss_hp_mult: float = 1.0
 
     def start(self, queue: list[str], scaling: WaveScaling, interval: float) -> None:
         self.queue = list(queue)
@@ -58,6 +59,9 @@ class SpawnManager:
             pos = self.random_spawn_point(player_pos, data.radius)
         enemy = create_enemy(enemy_type, self.enemy_db, pos, self.scaling)
         enemy.reward = max(1, int(enemy.reward * self.reward_mult))
+        if enemy.is_boss and self.boss_hp_mult != 1.0:
+            enemy.max_hp *= self.boss_hp_mult
+            enemy.hp = enemy.max_hp
         if near is None:  # summons never roll affixes
             roll_affix(enemy, self.affix_chance)
         return enemy

@@ -63,10 +63,14 @@ class WeaponBuilder:
 
     def clone(self, weapon: Weapon) -> Weapon:
         copy = Weapon(weapon.name, weapon.parts, weapon.level)
+        copy.evolution = weapon.evolution
         return copy
 
     @staticmethod
     def auto_name(weapon: Weapon) -> str:
+        evo = weapon.active_evolution()
+        if evo is not None:
+            return evo.name
         receiver = weapon.part(PartCategory.RECEIVER).name.replace(" Receiver", "")
         ammo = weapon.part(PartCategory.AMMO).name
         trig = weapon.part(PartCategory.TRIGGER).name

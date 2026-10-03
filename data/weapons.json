@@ -1083,5 +1083,155 @@
         ]
       }
     }
+  },
+  "attachment": {
+    "no_attachment": {
+      "name": "None",
+      "rarity": "COMMON",
+      "price": 0,
+      "description": "No attachment installed.",
+      "props": {
+        "attachment": "none",
+        "attach_cooldown": 0,
+        "attach_power": 0,
+        "attach_range": 0,
+        "attach_arc": 0
+      },
+      "visual": {
+        "shape": "none"
+      }
+    },
+    "bayonet": {
+      "name": "Bayonet",
+      "rarity": "COMMON",
+      "price": 120,
+      "description": "Auto-stabs enemies that get close.",
+      "props": {
+        "attachment": "bayonet",
+        "attach_cooldown": 0.45,
+        "attach_power": 0.5,
+        "attach_range": 75,
+        "attach_arc": 0
+      },
+      "visual": {
+        "shape": "blade",
+        "length": 14,
+        "color": [
+          200,
+          205,
+          215
+        ]
+      }
+    },
+    "katana": {
+      "name": "Katana",
+      "rarity": "RARE",
+      "price": 360,
+      "description": "Slashes everything in front of you and cuts enemy bullets out of the air.",
+      "props": {
+        "attachment": "katana",
+        "attach_cooldown": 0.8,
+        "attach_power": 1.4,
+        "attach_range": 125,
+        "attach_arc": 150
+      },
+      "visual": {
+        "shape": "blade",
+        "length": 30,
+        "color": [
+          230,
+          235,
+          255
+        ]
+      }
+    },
+    "grenade_launcher": {
+      "name": "Grenade Launcher",
+      "rarity": "UNCOMMON",
+      "price": 260,
+      "description": "While shooting, lobs a grenade at your aim every 3s.",
+      "props": {
+        "attachment": "launcher",
+        "attach_cooldown": 3.0,
+        "attach_power": 1.6,
+        "attach_range": 350,
+        "attach_arc": 0
+      },
+      "visual": {
+        "shape": "tube",
+        "length": 20,
+        "color": [
+          90,
+          110,
+          70
+        ]
+      }
+    },
+    "flamethrower": {
+      "name": "Flamethrower",
+      "rarity": "UNCOMMON",
+      "price": 240,
+      "description": "While shooting, sprays a short flame cone that burns.",
+      "props": {
+        "attachment": "flamer",
+        "attach_cooldown": 0.1,
+        "attach_power": 0.35,
+        "attach_range": 170,
+        "attach_arc": 40
+      },
+      "visual": {
+        "shape": "tank",
+        "length": 16,
+        "color": [
+          200,
+          80,
+          40
+        ]
+      }
+    },
+    "support_drone": {
+      "name": "Support Drone",
+      "rarity": "RARE",
+      "price": 380,
+      "description": "A drone orbits you and shoots the nearest enemy.",
+      "props": {
+        "attachment": "drone",
+        "attach_cooldown": 0.45,
+        "attach_power": 0.5,
+        "attach_range": 450,
+        "attach_arc": 0
+      },
+      "visual": {
+        "shape": "antenna",
+        "length": 8,
+        "color": [
+          255,
+          220,
+          90
+        ]
+      }
+    },
+    "tesla_attachment": {
+      "name": "Tesla Coil",
+      "rarity": "EPIC",
+      "price": 520,
+      "description": "Every 1.5s, zaps up to 4 nearby enemies.",
+      "props": {
+        "attachment": "tesla",
+        "attach_cooldown": 1.5,
+        "attach_power": 0.9,
+        "attach_range": 230,
+        "attach_arc": 0
+      },
+      "visual": {
+        "shape": "coil",
+        "length": 12,
+        "color": [
+          140,
+          170,
+          255
+        ]
+      }
+    }
   }
 }

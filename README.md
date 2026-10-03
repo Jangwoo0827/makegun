@@ -1,5 +1,7 @@
 # GUN DESIGNER
 
+**v1.2.0** — see [CHANGELOG.md](CHANGELOG.md)
+
 2D top-down roguelite shooter where you build your own gun from parts.
 
 ```bash
@@ -24,6 +26,10 @@ Produces `dist/gundesigner_web.zip` - upload to itch.io as an **HTML** project
 **touch controls** automatically: left = move stick, right = aim stick (holding it fires), plus
 DASH / NADE / R / SWAP / pause buttons. Saves are kept in the browser's local storage.
 
+## Automatic builds
+`.github/workflows/build.yml` runs the playtest and builds `GunDesigner.exe` + `gundesigner_web.zip` on every push
+(download them from the Actions run). Pushing a tag like `v1.2.0` also publishes a GitHub Release.
+
 ## Controls
 | Key | Action |
 |---|---|
@@ -42,8 +48,13 @@ DASH / NADE / R / SWAP / pause buttons. Saves are kept in the browser's local st
 - Dying deletes the save (roguelite rules).
 
 ## Stages & progression
-- **5 stages** (Outskirts → Foundry → The Hive → Fortress → The Core), each with its own map, enemy mix, difficulty
-  and bosses (`data/stages.json`). Clear every wave to unlock the next stage.
+- **8 stages** (Outskirts → Foundry → The Hive → Fortress → The Core → Wasteland → The Spire → Omega), each with its
+  own map, enemy mix, difficulty and bosses (`data/stages.json`). Clear every wave to unlock the next stage.
+- **Ascension 1–10** (`data/ascension.json`): clearing the final stage unlocks the next level; pick it in stage select.
+- **Modes** (`data/modes.json`): ENDLESS and BOSS RUSH, unlocked by clearing THE CORE.
+- **Characters** (`data/characters.json`): bought with cores in LOADOUT.
+- **Attachments**: a 7th part slot (bayonet, katana, grenade launcher, flamethrower, drone, tesla coil).
+- **Evolution** (`data/evolutions.json`): a synergy weapon at Lv.8 can EVOLVE in the shop.
 - **Cores** are earned at the end of every run (more for later stages, bosses and stage clears) and spent on
   **permanent upgrades** in UPGRADES (`data/meta_upgrades.json`).
 - **Achievements & lifetime stats** in STATS (`data/achievements.json`), saved in `profile.json`.

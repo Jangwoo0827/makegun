@@ -14,6 +14,8 @@ import settings
 from systems import storage
 from entities.player_stats import PlayerStats
 from game.session import RunSession
+from game.ascension import ascension_mods
+from game.characters import DEFAULT_CHARACTER, get_character
 from game.stages import StageData
 from systems.upgrade_manager import UpgradeManager
 from weapons.weapon_builder import STARTER_PRESETS
@@ -49,6 +51,10 @@ class SaveManager:
             "version": SAVE_VERSION,
             "phase": phase,
             "stage": session.stage.index,
+            "stage_id": session.stage.stage_id,
+            "ascension": session.ascension.level,
+            "character": session.character,
+            "run_time": session.run_time,
             "boss_kills": session.boss_kills,
             "run_stats": session.run_stats,
             "resume_wave": resume_wave,
@@ -60,7 +66,7 @@ class SaveManager:
             "stats": asdict(session.stats),
             "slots_unlocked": session.slots_unlocked,
             "current_weapon": p.current,
-            "weapons": [{"name": w.name, "level": w.level,
+            "weapons": [{"name": w.name, "level": w.level, "evolution": w.evolution,
                          "parts": {c.value: w.parts[c].part_id for c in PART_ORDER}} for w in p.weapons],
             "upgrades_taken": [u.upgrade_id for u in session.upgrades_taken],
             "pending_upgrades": [u.upgrade_id for u in session.pending_upgrades],
@@ -81,9 +87,15 @@ class SaveManager:
 
     def _build_session(self, data: dict[str, Any], library: PartLibrary,
                        upgrades: UpgradeManager, stages: list[StageData]) -> RunSession:
-        stage = stages[max(0, min(int(data.get("stage", 0)), len(stages) - 1))]
+        by_id = {s.stage_id: s for s in stages}
+        stage = by_id.get(str(data.get("stage_id", "")),
+                          stages[max(0, min(int(data.get("stage", 0)), len(stages) - 1))])
         session = RunSession(library, upgrades, STARTER_PRESETS[0], stage)
         session.boss_kills = int(data.get("boss_kills", 0))
+        session.run_time = float(data.get("run_time", 0.0))
+        session.ascension = ascension_mods(int(data.get("ascension", 0)))
+        session.character = str(data.get("character", DEFAULT_CHARACTER))
+        session.player.color = get_character(session.character).color
         session.run_stats = {k: float(v) for k, v in data.get("run_stats", {}).items()}
         session.money = int(data["money"])
         session.money_earned = int(data.get("money_earned", 0))
@@ -107,6 +119,8 @@ class SaveManager:
                     part_ids[category] = pid
             weapon = session.builder.build(part_ids, wd.get("name"))
             weapon.level = max(1, min(settings.WEAPON_MAX_LEVEL, int(wd.get("level", 1))))
+            evo = wd.get("evolution")
+            weapon.evolution = str(evo) if evo else None
             weapons.append(weapon)
         if not weapons:
             raise ValueError("save has no weapons")

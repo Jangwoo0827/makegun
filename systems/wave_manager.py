@@ -6,6 +6,7 @@ from enum import Enum, auto
 
 import settings
 from entities.enemy import WaveScaling
+from game.ascension import AscensionMods
 from game.stages import StageData
 from systems.spawn_manager import SpawnManager
 
@@ -41,7 +42,7 @@ def stage_scaling(wave: int, stage: StageData | None) -> WaveScaling:
     return sc
 
 
-def build_wave(wave: int, stage: StageData | None = None) -> list[str]:
+def build_wave(wave: int, stage: StageData | None = None, count_mult: float = 1.0) -> list[str]:
     """Return the ordered list of enemy types for a wave.
 
     Later stages unlock enemy types earlier (pool_offset) and add a few extra enemies.
@@ -49,7 +50,11 @@ def build_wave(wave: int, stage: StageData | None = None) -> list[str]:
     bosses = list(stage.bosses_for(wave)) if stage is not None else \
         ([boss_for_wave(wave)] if is_boss_wave(wave) else [])
     stage_index = stage.index if stage is not None else 0
-    count = 6 + int(wave * 2.2) + stage_index * 2
+    count = int((6 + int(wave * 2.2) + stage_index * 2) * count_mult)
+    if stage is not None and stage.mode == "bossrush":
+        # each wave is a boss with a few escorts
+        escorts = random.choices(["normal", "fast", "shooter", "charger"], k=int((2 + wave) * count_mult))
+        return list(bosses) + escorts
     wave = wave + (stage.pool_offset if stage is not None else 0)  # pool/elite thresholds
     pool: list[tuple[str, float]] = [("normal", 10.0)]
     if wave >= 2:
@@ -87,9 +92,11 @@ def build_wave(wave: int, stage: StageData | None = None) -> list[str]:
 
 
 class WaveManager:
-    def __init__(self, spawner: SpawnManager, stage: StageData | None = None) -> None:
+    def __init__(self, spawner: SpawnManager, stage: StageData | None = None,
+                 asc: AscensionMods | None = None) -> None:
         self.spawner = spawner
         self.stage = stage
+        self.asc: AscensionMods = asc or AscensionMods()
         self.wave: int = 0
         self.phase: WavePhase = WavePhase.CLEARED
         self.countdown: float = 0.0
@@ -98,15 +105,20 @@ class WaveManager:
 
     def start_next_wave(self) -> None:
         self.wave += 1
-        queue = build_wave(self.wave, self.stage)
+        queue = build_wave(self.wave, self.stage, self.asc.enemy_count)
         self.total = len(queue)
         self.killed = 0
         interval = max(0.18, settings.SPAWN_INTERVAL - self.wave * 0.012)
-        self.spawner.start(queue, stage_scaling(self.wave, self.stage), interval)
+        scaling = stage_scaling(self.wave, self.stage)
+        scaling.hp *= self.asc.enemy_hp
+        scaling.damage *= self.asc.enemy_damage
+        scaling.speed *= self.asc.enemy_speed
+        self.spawner.start(queue, scaling, interval)
+        self.spawner.boss_hp_mult = self.asc.boss_hp
         if self.stage is not None:
             self.spawner.reward_mult = self.stage.reward_mult
             self.spawner.affix_chance = (self.stage.affix_chance + 0.01 * self.wave
-                                         if self.stage.affix_chance > 0 else 0.0)
+                                         if self.stage.affix_chance > 0 else 0.0) + self.asc.affix_add
         self.phase = WavePhase.COUNTDOWN
         self.countdown = settings.WAVE_START_DELAY
 
@@ -122,7 +134,7 @@ class WaveManager:
 
     @property
     def is_final_wave(self) -> bool:
-        return self.stage is not None and self.wave >= self.stage.waves
+        return self.stage is not None and self.stage.waves > 0 and self.wave >= self.stage.waves
 
     @property
     def remaining(self) -> int:

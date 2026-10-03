@@ -345,6 +345,123 @@ click(g.top.preset_buttons[2]); assert g.profile.preset(2) is not None, "SAVE TO
 key(pygame.K_ESCAPE); g.end_run()
 print("editor touch ui ok")
 
+# --- v1.2: 8 stages, ascension, modes, characters, attachments, evolution, patch notes
+assert len(g.stages) == 8 and g.stages[-1].stage_id == "omega"
+from game.ascension import ascension_mods
+from systems.wave_manager import build_wave, stage_scaling
+a10 = ascension_mods(10)
+assert abs(a10.enemy_hp - 1.40) < 1e-6 and a10.start_money == -100 and abs(a10.heal - 0.7) < 1e-6
+assert len(build_wave(5, g.stages[0], a10.enemy_count)) > len(build_wave(5, g.stages[0]))
+end = g.modes["endless"]
+assert end.bosses_for(10) == ("boss",) and end.bosses_for(20) == ("titan",) and len(end.bosses_for(30)) == 2
+assert end.bosses_for(15) == ()
+rush = g.modes["bossrush"]
+assert build_wave(3, rush)[0] == "broodmother"
+
+# ascension applies on normal stages
+g.profile.ascension_unlocked = 10; g.profile.selected_ascension = 7
+g.start_new_run(0); s = g.session; ps = g.play_state
+assert s.ascension.level == 7 and s.stats.heal_multiplier < 1.0 and s.price(100) == 120
+hp0 = s.player.hp; s.player.hp = 10; s.player.heal(10); assert abs(s.player.hp - 17) < 0.01, s.player.hp
+assert ps.waves.asc.level == 7
+g.end_run(); g.profile.selected_ascension = 0
+
+# final stage clear unlocks next ascension + achievement
+g.profile.ascension_unlocked = 3; g.profile.selected_ascension = 3; g.profile.unlocked_stage = 7
+g.start_new_run(7); ps = g.play_state; sess = g.session
+ps.waves.wave = sess.stage.waves - 1; ps.world.enemies.clear(); ps._start_wave()
+ps.spawner.queue.clear(); ps.waves.phase = ps.waves.phase.ACTIVE; step(5)
+assert g.top.state_id == StateID.STAGE_CLEAR, g.top
+assert g.profile.ascension_unlocked == 4 and "ascended" in g.profile.achievements and "stage_8" in g.profile.achievements
+step(2); g.end_run(); g.profile.selected_ascension = 0
+print("stages + ascension ok")
+
+# endless: no final wave, best wave recorded on death
+g.start_new_run(stage_id="endless"); ps = g.play_state; sess = g.session
+assert sess.stage.mode == "endless" and not ps.waves.is_final_wave and sess.ascension.level == 0
+ps.waves.wave = 33; sess.wave_reached = 33
+sess.player.invuln = 0; sess.player.hp = 1; ps._on_player_hit(999, sess.player.pos)
+for _ in range(120):
+    step()
+    if g.top.state_id == StateID.GAME_OVER: break
+assert g.top.state_id == StateID.GAME_OVER and g.profile.stat("endless_best") >= 33 and "endless_30" in g.profile.achievements
+g.end_run()
+
+# boss rush: starts in the intermission with money/parts, records time on clear
+g.start_new_run(stage_id="bossrush"); sess = g.session; ps = g.play_state
+assert g.top.state_id == StateID.INTERMISSION and sess.money >= 1500 and len(sess.owned_parts) >= 18
+key(pygame.K_SPACE); assert g.top.state_id == StateID.GAME and ps.waves.wave == 1
+assert any(e.is_boss for e in ps.world.enemies) or "boss" in ps.spawner.queue
+ps.waves.wave = 3; ps.world.enemies.clear(); ps.spawner.queue.clear()
+sess.run_time = 123.4
+ps.waves.phase = ps.waves.phase.CLEARED; ps.awaiting_next_wave = True
+ps._start_wave(); ps.world.enemies.clear(); ps.spawner.queue.clear(); ps.waves.phase = ps.waves.phase.ACTIVE
+step(5)
+assert g.top.state_id == StateID.STAGE_CLEAR, g.top
+assert g.profile.stat("bossrush_clears") == 1 and 120 < g.profile.stat("best_bossrush_time") < 130
+assert len(g.top.buttons.buttons) == 1, "no NEXT stage after boss rush"
+step(2); g.end_run()
+print("endless + boss rush ok")
+
+# characters: buy duelist, start with katana, color, stats
+g.profile.cores = 500
+g.push(StateID.LOADOUT); lo = g.top
+from game.characters import all_characters
+idx = [c.char_id for c in all_characters()].index("duelist")
+click(lo.buttons.buttons[4 + idx])
+assert "duelist" in g.profile.unlocked_characters and g.options.character == "duelist" and g.profile.cores == 380
+key(pygame.K_ESCAPE)
+g.start_new_run(0); s = g.session
+from weapons.weapon_parts import PartCategory as C
+assert s.player.weapon.part(C.ATTACHMENT).part_id == "katana" and s.player.color == (255, 100, 140)
+assert abs(s.stats.crit_chance - (0.05 + 0.10)) < 1e-6
+g.end_run(); g.options.character = "gunner"
+
+# attachments: every type procs and kills
+g.start_new_run(0); ps = g.play_state; s = g.session; p = s.player
+ps.waves.countdown = 999
+for att in ("bayonet", "katana", "grenade_launcher", "flamethrower", "support_drone", "tesla_attachment"):
+    p.weapon.set_part(lib.get(att)); s.player.refresh_weapons()
+    ps.world.enemies.clear(); ps.grenades.clear(); ps.attachments.timer = 0
+    for i in range(4):
+        e = ps.spawner.spawn_now("normal", p.pos); e.pos = p.pos + pygame.Vector2(60 + i * 10, (i - 1.5) * 12)
+        e.max_hp = e.hp = 5; e.speed = e.base_speed = 0; ps.world.enemies.append(e)
+    p.aim_at(p.pos + pygame.Vector2(100, 0))
+    mouse["pos"] = (int(p.pos.x - ps.camera.offset.x + 100), int(p.pos.y - ps.camera.offset.y))
+    mouse["down"] = att in ("grenade_launcher", "flamethrower")
+    p.weapon.ammo = 0; p.weapon.reserve = 0  # no gun shots: only the attachment can kill
+    kills0 = s.kills
+    for _ in range(90):
+        p.hp = p.max_hp; p.weapon.ammo = 0; step()
+    mouse["down"] = False
+    assert s.kills > kills0, f"{att} did not kill"
+print("attachments ok")
+
+# evolution through the shop
+w = p.weapon
+for pid in ("shotgun_receiver", "split_ammo"):
+    s.owned_parts.add(pid); w.set_part(lib.get(pid))
+w.level = 8; s.player.refresh_weapons()
+assert s.evolution_for(w) is not None
+s.money = 100
+g.push(StateID.SHOP); sh = g.top
+evo_btn = [b for b in sh.buttons.buttons if b.text.startswith("EVOLVE INTO")][0]
+click(evo_btn)
+assert w.evolution == "scattershot" and w.name == "Thunder Choir" and w.stats.evolution == "Thunder Choir"
+assert "evolved" in g.profile.achievements or s.run_stats.get("run_evolutions") == 1
+key(pygame.K_ESCAPE)
+# save/load keeps ascension, character, evolution
+g.pop_to(StateID.GAME); ps.awaiting_next_wave = True
+g.save_run(); g.save_and_quit_to_menu(); assert g.continue_run()
+w2 = g.session.player.weapon
+assert w2.evolution == "scattershot" and w2.name == "Thunder Choir"
+g.end_run()
+print("evolution + save ok")
+
+# new screens render
+for sid in (StateID.PATCH_NOTES, StateID.LOADOUT, StateID.STAGE_SELECT):
+    g.push(sid); step(3); g.pop()
+
 # --- every screen renders
 for sid in (StateID.STAGE_SELECT, StateID.META, StateID.STATS):
     g.push(sid); step(3); g.pop()

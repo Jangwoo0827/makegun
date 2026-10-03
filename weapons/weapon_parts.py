@@ -13,6 +13,7 @@ class PartCategory(str, Enum):
     TRIGGER = "trigger"
     AMMO = "ammo"
     MODIFIER = "modifier"
+    ATTACHMENT = "attachment"
 
     @property
     def label(self) -> str:
@@ -26,6 +27,7 @@ PART_ORDER: tuple[PartCategory, ...] = (
     PartCategory.TRIGGER,
     PartCategory.AMMO,
     PartCategory.MODIFIER,
+    PartCategory.ATTACHMENT,
 )
 
 

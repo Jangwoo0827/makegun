@@ -16,10 +16,12 @@ from game.state import GameState, StateID
 from game.world import World
 from systems.collision import CollisionSystem, line_of_sight
 from systems.affixes import affix_death_actions
+from systems.attachments import AttachmentSystem
 from systems.combat import CombatSystem
 from systems.loot_manager import LootManager
 from systems.spawn_manager import SpawnManager
 from systems.wave_manager import WaveManager, WavePhase
+from ui.fonts import draw_text
 from ui.hud import HUD
 from weapons.weapon_parts import PartCategory
 from weapons.gun_renderer import part_color
@@ -44,11 +46,12 @@ class PlayState(GameState):
         self.camera.snap_to(session.player.pos)
         self.world.effects.show_numbers = game.options.damage_numbers
         self.spawner = SpawnManager(game.enemy_db, self.world.walls)
-        self.waves = WaveManager(self.spawner, session.stage)
+        self.waves = WaveManager(self.spawner, session.stage, session.ascension)
         self.grenades: list[Grenade] = []
         self._pulse: bool = False  # touch: alternates the trigger so semi-auto guns keep firing
         self.stats_timer: float = 0.0
         self.combat = CombatSystem(self.world, game.sound, self.camera.shake)
+        self.attachments = AttachmentSystem(self.world, self.combat, game.sound, self.grenades.append)
         self.collisions = CollisionSystem(self.combat.on_bullet_hit_enemy, self.combat.on_bullet_hit_wall,
                                           self._on_player_hit, self._on_pickup)
         self.loot = LootManager(game.library)
@@ -146,9 +149,11 @@ class PlayState(GameState):
                 player.muzzle_flash = 0.06
             if weapon.reloading and not was_reloading:
                 self.game.sound.play("reload")
+            self.attachments.update(dt, player, bool(trigger) or (self.game.touch.active and touch.aim is not None))
 
         # Spawning
         if self.waves.phase == WavePhase.ACTIVE:
+            self.session.run_time += dt
             for e in self.spawner.update(dt, player.pos, len(world.enemies)):
                 self._add_enemy(e)
 
@@ -168,7 +173,7 @@ class PlayState(GameState):
             g.update(dt)
             if g.exploded:
                 self._explode_grenade(g)
-        self.grenades = [g for g in self.grenades if not g.exploded]
+        self.grenades[:] = [g for g in self.grenades if not g.exploded]  # in place: attachments hold a ref
         for p in world.pickups:
             p.update(dt, player.pos, settings.PLAYER_PICKUP_RADIUS * self.session.stats.pickup_radius_multiplier)
 
@@ -383,8 +388,15 @@ class PlayState(GameState):
         self.world.draw(surface, offset)
         for g in self.grenades:
             g.draw(surface, offset)
+        self.attachments.draw(surface, offset, self.session.player)
         player = self.session.player
         self.hud.draw(surface, player, self.session.money, self.waves, self.world.boss())
+        s = self.session
+        if s.stage.mode == "bossrush":
+            draw_text(surface, f"TIME {s.run_time // 60:.0f}:{s.run_time % 60:04.1f}", (surface.get_width() // 2, 112),
+                      20, (255, 255, 255), True, "center")
+        if s.ascension.level:
+            draw_text(surface, f"ASCENSION {s.ascension.level}", (24, 90), 14, (255, 120, 120), True)
         touch = self.game.touch
         if touch.active:
             touch.draw(surface, {"dash": player.dash_cooldown / max(0.01, player.dash_cooldown_max),

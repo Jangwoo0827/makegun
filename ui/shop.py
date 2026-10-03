@@ -71,6 +71,16 @@ class ShopState(GameState):
         self.buttons.add(Button((rx, 460, 390, 50), "REROLL STOCK", self._reroll, font_size=16,
                                 subtext=f"${self.shop.reroll_cost}",
                                 enabled=s.can_afford(self.shop.reroll_cost)))
+        evo = s.evolution_for(weapon)
+        if weapon.evolution is not None:
+            evo_label, evo_sub = f"EVOLVED: {weapon.name}", "legendary weapon"
+        elif evo is not None:
+            evo_label, evo_sub = f"EVOLVE INTO {evo.name.upper()}", "free - synergy weapon at max power"
+        else:
+            evo_label = "EVOLVE"
+            evo_sub = f"needs Lv.{settings.EVOLVE_LEVEL} + an active synergy"
+        self.buttons.add(Button((rx, 520, 390, 50), evo_label, self._evolve, font_size=15, subtext=evo_sub,
+                                enabled=evo is not None, accent=settings.RARITY_COLORS["LEGENDARY"]))
         self.buttons.add(Button((rx, H - 70, 185, 50), "EDITOR", lambda: self.game.replace(StateID.WEAPON_EDITOR),
                                 hotkey=pygame.K_e))
         self.buttons.add(Button((rx + 205, H - 70, 185, 50), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
@@ -102,6 +112,13 @@ class ShopState(GameState):
             self.game.sound.play("buy")
             self.weapon_index = len(self.session.weapons) - 1
             self._notify("New weapon slot unlocked! Customize it in the EDITOR.")
+        self._build()
+
+    def _evolve(self) -> None:
+        weapon = self.session.weapons[self.weapon_index]
+        if self.session.evolve(weapon):
+            self.game.sound.play("boss")
+            self._notify(f"EVOLVED into {weapon.name}!")
         self._build()
 
     def _reroll(self) -> None:

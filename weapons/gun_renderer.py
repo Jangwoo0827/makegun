@@ -139,6 +139,25 @@ def draw_gun(surface: pygame.Surface, parts: dict[PartCategory, WeaponPart], ori
         bw2 = g.barrel_w / 2
         if not image(PartCategory.BARREL, g.rx1 - 2, off - bw2, g.muzzle_x, off + bw2):
             poly(_rect(g.rx1 - 2, off - bw2, g.muzzle_x, off + bw2), (95, 100, 112))
+    # Attachment (under-barrel / on-top accessory)
+    att = parts.get(PartCategory.ATTACHMENT)
+    if att is not None and not image(PartCategory.ATTACHMENT, g.rx1 - 4, h2 - 2, g.rx1 + 18, h2 + 6):
+        av = att.visual
+        shape = str(av.get("shape", "none"))
+        alen = float(av.get("length", 12))
+        acol = _col(av.get("color"), (180, 180, 190))
+        if shape == "blade":  # bayonet / katana along and past the barrel
+            poly([(g.rx1, h2 - 1), (g.muzzle_x + alen, h2 + 1), (g.rx1, h2 + 4)], acol)
+        elif shape == "tube":
+            poly(_rect(g.rx1 - 6, h2, g.rx1 - 6 + alen, h2 + 6), acol)
+        elif shape == "tank":
+            poly(_rect(g.rx1 - alen, h2, g.rx1, h2 + 8), acol)
+        elif shape == "antenna":
+            poly(_rect(g.rx0 + 4, -h2 - alen, g.rx0 + 6, -h2), acol, edge=False)
+        elif shape == "coil":
+            for k in range(3):
+                cx = g.rx0 + 6 + k * 5
+                poly(_rect(cx, -h2 - 4, cx + 3, -h2), acol)
     # Receiver body
     if not image(PartCategory.RECEIVER, g.rx0, -h2, g.rx1, -h2 + g.receiver_h * RECEIVER_IMAGE_HEIGHT):
         poly(_rect(g.rx0, -h2, g.rx1, h2), g.receiver_color)

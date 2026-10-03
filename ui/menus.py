@@ -8,7 +8,8 @@ import pygame
 
 import settings
 from game.state import GameState, StateID
-from ui.buttons import Button, ButtonGroup, draw_panel
+from game.characters import Character, all_characters
+from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
 from ui.hud import stat_lines
 from weapons.gun_renderer import draw_gun
@@ -87,6 +88,8 @@ class MainMenuState(MenuState):
         for i, (label, cb, sub) in enumerate(items):
             self.buttons.add(Button((x, y + i * 58, 280, 50), label, cb, font_size=20 if sub else 22,  # type: ignore[arg-type]
                                     subtext=sub, selected=(label == "CONTINUE")))
+        self.buttons.add(Button((16, H - 52, 210, 36), f"v{settings.VERSION}  PATCH NOTES",
+                                lambda: game.push(StateID.PATCH_NOTES), font_size=13))
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
@@ -126,6 +129,7 @@ class MainMenuState(MenuState):
         draw_gun(surface, parts, (W // 2 - 38, 190), -0.12 + math.sin(self.time) * 0.05, 1.8)
         self.buttons.draw(surface)
         draw_text(surface, f"Starter: {preset.name}", (W // 2, H - 58), 16, settings.UI_TEXT_DIM, anchor="center")
+        draw_text(surface, f"v{settings.VERSION}", (W - 16, 16), 14, settings.UI_TEXT_DIM, anchor="topright")
         draw_text(surface, "WASD move | Mouse aim | LMB fire | SPACE dash | Q/RMB grenade | R reload | 1/2/3 switch | ESC pause",
                   (W // 2, H - 30), 15, settings.UI_TEXT_DIM, anchor="center")
 
@@ -141,33 +145,73 @@ class LoadoutState(MenuState):
 
     def _build(self) -> None:
         self.buttons.clear()
+        # starting weapons first (indices 0..3)
         for i, preset in enumerate(STARTER_PRESETS):
-            rect = (80 + i * 285, 150, 265, 330)
+            rect = (80 + i * 285, 395, 265, 205)
             self.buttons.add(Button(rect, "", lambda i=i: self._select(i),
                                     selected=i == self.game.options.starter_index))
-        self.buttons.add(Button((W // 2 - 110, 600, 220, 54), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
+        # characters
+        prof = self.game.profile
+        chars = all_characters()
+        cw, gap = 192, 12
+        x0 = W // 2 - (len(chars) * cw + (len(chars) - 1) * gap) // 2
+        for i, c in enumerate(chars):
+            owned = c.char_id in prof.unlocked_characters
+            self.buttons.add(Button((x0 + i * (cw + gap), 120, cw, 210), "", lambda c=c: self._character(c),
+                                    accent=c.color, selected=owned and self.game.options.character == c.char_id,
+                                    enabled=owned or prof.cores >= c.cost))
+        self.buttons.add(Button((W // 2 - 110, 630, 220, 50), "BACK", self.game.pop, hotkey=pygame.K_ESCAPE))
 
     def _select(self, index: int) -> None:
         self.game.options.starter_index = index
         self.game.options.save()
         self._build()
 
+    def _character(self, c: Character) -> None:
+        prof = self.game.profile
+        if c.char_id not in prof.unlocked_characters:
+            if not prof.buy_character(c.char_id, c.cost):
+                return
+            self.game.sound.play("buy")
+            for a in prof.check_achievements():
+                self.game.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")
+        self.game.options.character = c.char_id
+        self.game.options.save()
+        self._build()
+
     def draw(self, surface: pygame.Surface) -> None:
         draw_backdrop(surface, self.time)
-        draw_text(surface, "LOADOUT", (W // 2, 70), 48, settings.UI_ACCENT, True, "center")
-        draw_text(surface, "Choose your starting weapon. Its parts are unlocked for the run.", (W // 2, 115), 17,
-                  settings.UI_TEXT_DIM, anchor="center")
+        prof = self.game.profile
+        draw_text(surface, "LOADOUT", (W // 2, 44), 44, settings.UI_ACCENT, True, "center")
+        draw_text(surface, f"CHARACTER  -  {prof.cores} cores", (W // 2, 96), 18, (150, 220, 255), True, "center")
+        draw_text(surface, "STARTING WEAPON", (W // 2, 372), 18, settings.UI_TEXT_DIM, True, "center")
         self.buttons.draw(surface)
         for i, preset in enumerate(STARTER_PRESETS):
             rect = self.buttons.buttons[i].rect
             built = self.previews[i]
-            draw_text(surface, preset.name, (rect.centerx, rect.y + 24), 24, settings.UI_TEXT, True, "center")
-            draw_gun(surface, built.parts, (rect.centerx - 40, rect.y + 90), 0.0, 2.0)
-            draw_text(surface, preset.description, (rect.centerx, rect.y + 150), 13, settings.UI_TEXT_DIM,
+            draw_text(surface, preset.name, (rect.centerx, rect.y + 20), 22, settings.UI_TEXT, True, "center")
+            draw_gun(surface, built.parts, (rect.centerx - 34, rect.y + 72), 0.0, 1.7)
+            draw_text(surface, preset.description, (rect.centerx, rect.y + 118), 12, settings.UI_TEXT_DIM,
                       anchor="center")
-            for j, (k, v) in enumerate(stat_lines(built.stats)[:6]):
-                draw_text(surface, k, (rect.x + 20, rect.y + 180 + j * 22), 14, settings.UI_TEXT_DIM)
-                draw_text(surface, v, (rect.right - 20, rect.y + 180 + j * 22), 14, settings.UI_TEXT, True, "topright")
+            for j, (k, v) in enumerate(stat_lines(built.stats)[:3]):
+                draw_text(surface, k, (rect.x + 18, rect.y + 140 + j * 20), 13, settings.UI_TEXT_DIM)
+                draw_text(surface, v, (rect.right - 18, rect.y + 140 + j * 20), 13, settings.UI_TEXT, True, "topright")
+        chars = all_characters()
+        for i, c in enumerate(chars):
+            rect = self.buttons.buttons[len(STARTER_PRESETS) + i].rect
+            owned = c.char_id in prof.unlocked_characters
+            pygame.draw.circle(surface, c.color, (rect.centerx, rect.y + 44), 22)
+            pygame.draw.circle(surface, (255, 255, 255), (rect.centerx, rect.y + 44), 22, 2)
+            draw_text(surface, c.name, (rect.centerx, rect.y + 84), 17, settings.UI_TEXT, True, "center")
+            for j, line in enumerate(wrap_text(c.description, 12, rect.w - 20)[:4]):
+                draw_text(surface, line, (rect.centerx, rect.y + 110 + j * 17), 12, settings.UI_TEXT_DIM,
+                          anchor="center")
+            if owned:
+                label = "SELECTED" if self.game.options.character == c.char_id else "OWNED"
+                color = settings.UI_GOOD if label == "SELECTED" else settings.UI_TEXT_DIM
+            else:
+                label, color = f"{c.cost} cores", (150, 220, 255) if prof.cores >= c.cost else settings.UI_BAD
+            draw_text(surface, label, (rect.centerx, rect.bottom - 18), 15, color, True, "center")
 
 
 class DeviceSelectState(MenuState):
@@ -300,7 +344,8 @@ class IntermissionState(MenuState):
     def draw(self, surface: pygame.Surface) -> None:
         draw_backdrop(surface, self.time)
         s = self.game.require_session()
-        draw_text(surface, f"{s.stage.name}  -  WAVE {s.wave_reached}/{s.stage.waves} COMPLETE", (W // 2, 110), 40,
+        total = f"/{s.stage.waves}" if s.stage.waves else ""
+        draw_text(surface, f"{s.stage.name}  -  WAVE {s.wave_reached}{total} COMPLETE", (W // 2, 110), 40,
                   settings.UI_ACCENT, True, "center")
         draw_text(surface, f"$ {s.money}", (W // 2, 170), 30, settings.MONEY_COLOR, True, "center")
         p = s.player
