@@ -11,6 +11,7 @@ from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
 from ui.menus import draw_backdrop
 from systems.assets import ASSETS
+from systems.tutorial import HINTS, draw_hint
 from ui.scroll_row import ScrollRow
 from weapons.gun_renderer import draw_gun
 from weapons.weapon import Weapon, WeaponStats
@@ -212,6 +213,9 @@ class WeaponEditorState(GameState):
         self._notify(msg)
         self._build()
 
+    def on_exit(self) -> None:
+        self.game.profile.hints_seen.add("editor")
+
     def _back(self) -> None:
         self.game.pop()
 
@@ -328,6 +332,8 @@ class WeaponEditorState(GameState):
         self.buttons.draw(surface)
         for row in self.rows.values():
             row.draw(surface)
+        if "editor" not in self.game.profile.hints_seen:
+            draw_hint(surface, HINTS["editor"])
         if self.message_time > 0:
             draw_text(surface, self.message, (PARTS_X, H - 80), 15, settings.UI_GOOD, True)
         elif self.dirty:

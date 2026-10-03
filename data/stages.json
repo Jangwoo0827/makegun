@@ -630,7 +630,7 @@
  {
   "id": "omega",
   "name": "OMEGA",
-  "subtitle": "The last arsenal. Every boss, every gun.",
+  "subtitle": "The Architect waits with a copy of your gun.",
   "waves": 25,
   "hp_mult": 19.0,
   "damage_mult": 4.8,
@@ -647,9 +647,7 @@
     "broodmother"
    ],
    "25": [
-    "boss",
-    "titan",
-    "warden"
+    "architect"
    ]
   },
   "floor": [

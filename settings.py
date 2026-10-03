@@ -20,7 +20,7 @@ RUN_SAVE_FILE: str = os.path.join(USER_DIR, "save_run.json")
 
 # --- Display -------------------------------------------------------------
 TITLE: str = "GUN DESIGNER"
-VERSION: str = "1.2.0"
+VERSION: str = "1.3.0"
 SCREEN_WIDTH: int = 1280
 SCREEN_HEIGHT: int = 720
 FPS: int = 60

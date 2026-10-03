@@ -3,6 +3,15 @@
 The in-game PATCH NOTES screen reads `data/patch_notes.json`; keep both in sync.
 The version shown in game is `settings.VERSION`.
 
+## v1.3.0 — 2026-10-03
+- New final boss THE ARCHITECT on OMEGA (and Boss Rush / Endless): it builds a copy of YOUR gun
+- Tutorial on your first run, plus one-time tips on the shop / editor / upgrade screens (replay it in SETTINGS)
+- STATS screen rebuilt with tabs: STATS, ACHIEVEMENTS, CODEX, HISTORY
+- CODEX: every part, enemy, synergy and evolution you have discovered
+- HISTORY: your last 20 runs
+- MOBILE mode enlarges small text for phone screens
+- Boss Rush now has 5 bosses
+
 ## v1.2.0 — 2026-10-03
 - 3 new stages: WASTELAND, THE SPIRE, OMEGA (8 stages total)
 - Ascension 1–10: clear the final stage to unlock harder runs with bigger core rewards

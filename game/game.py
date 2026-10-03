@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Callable
@@ -27,7 +28,7 @@ from ui.menus import (DeviceSelectState, GameOverState, IntermissionState, Loado
                       SettingsState)
 from ui.progression import MetaState, PatchNotesState, StageClearState, StageSelectState, StatsState
 from ui.shop import ShopState
-from ui.fonts import draw_text
+from ui.fonts import draw_text, set_mobile_text
 from ui.touch_controls import TouchControls
 from ui.buttons import draw_panel
 from ui.wave_clear import WaveClearState
@@ -109,6 +110,7 @@ class Game:
             StateID.PATCH_NOTES: lambda: PatchNotesState(self),
         }
         self.touch.active = self.options.input_mode == "mobile"
+        set_mobile_text(self.touch.active)
         self.change(StateID.MAIN_MENU if self.options.input_mode else StateID.DEVICE_SELECT)
 
     # ---------------------------------------------------------------- session
@@ -196,6 +198,12 @@ class Game:
                                             s.kills, s.boss_kills, victory, len(self.stages), mode=s.stage.mode,
                                             ascension=s.ascension.level, core_bonus=s.ascension.core_bonus,
                                             run_time=s.run_time)
+        self.profile.add_history({
+            "date": time.strftime("%Y-%m-%d %H:%M"), "stage": s.stage.name, "mode": s.stage.mode,
+            "ascension": s.ascension.level, "wave": s.wave_reached,
+            "waves": s.stage.waves, "victory": victory, "kills": s.kills, "time": round(s.run_time, 1),
+            "weapon": s.player.weapon.name, "character": s.character, "cores": cores})
+        self.profile.save()
         new = self.profile.check_achievements(s.run_stats)
         for a in new:
             self.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")
@@ -223,6 +231,7 @@ class Game:
         self.options.save()
         self.touch.active = mode == "mobile"
         self.touch.reset()
+        set_mobile_text(mode == "mobile")
 
     def toast(self, title: str, subtitle: str = "") -> None:
         self.toasts.append([title, subtitle, 4.0])

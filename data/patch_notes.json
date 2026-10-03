@@ -1,5 +1,18 @@
 [
  {
+  "version": "1.3.0",
+  "date": "2026-10-03",
+  "notes": [
+   "New final boss THE ARCHITECT on OMEGA (and Boss Rush / Endless): it builds a copy of YOUR gun",
+   "Tutorial on your first run, plus one-time tips on the shop / editor / upgrade screens (replay it in SETTINGS)",
+   "STATS screen rebuilt with tabs: STATS, ACHIEVEMENTS, CODEX, HISTORY",
+   "CODEX: every part, enemy, synergy and evolution you have discovered",
+   "HISTORY: your last 20 runs",
+   "MOBILE mode enlarges small text for phone screens",
+   "Boss Rush now has 5 bosses"
+  ]
+ },
+ {
   "version": "1.2.0",
   "date": "2026-10-03",
   "notes": [

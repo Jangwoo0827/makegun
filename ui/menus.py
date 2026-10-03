@@ -11,6 +11,7 @@ from game.state import GameState, StateID
 from game.characters import Character, all_characters
 from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
+from systems.tutorial import HINTS, draw_hint
 from ui.hud import stat_lines
 from weapons.gun_renderer import draw_gun
 from weapons.weapon_builder import STARTER_PRESETS, WeaponBuilder
@@ -270,6 +271,8 @@ class SettingsState(MenuState):
         for i, (label, value, attr) in enumerate(rows):
             self.buttons.add(Button((W // 2 - 180, 170 + i * 80, 360, 60), f"{label}: {'ON' if value else 'OFF'}",
                                     lambda a=attr: self._toggle(a), selected=value))
+        self.buttons.add(Button((W // 2 - 180, 170 + (len(rows) + 1) * 80, 360, 50), "REPLAY TUTORIAL",
+                                self._replay_tutorial, font_size=16))
         device = "MOBILE (touch)" if o.input_mode == "mobile" else "PC (mouse + keyboard)"
         self.buttons.add(Button((W // 2 - 180, 170 + len(rows) * 80, 360, 60), f"DEVICE: {device}",
                                 lambda: self.game.push(StateID.DEVICE_SELECT), font_size=18,
@@ -279,6 +282,10 @@ class SettingsState(MenuState):
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
         self._build()  # refresh after returning from the device screen
+
+    def _replay_tutorial(self) -> None:
+        self.game.profile.reset_tutorial()
+        self.game.toast("TUTORIAL RESET", "It will play on your next stage run")
 
     def _toggle(self, attr: str) -> None:
         o = self.game.options
@@ -338,6 +345,9 @@ class IntermissionState(MenuState):
         pygame.mouse.set_visible(True)
         self.game.save_run()  # autosave after upgrades / shop / editor changes
 
+    def on_exit(self) -> None:
+        self.game.profile.hints_seen.add("intermission")
+
     def _continue(self) -> None:
         self.game.pop_to(StateID.GAME)
 
@@ -357,6 +367,8 @@ class IntermissionState(MenuState):
         elif nxt == s.stage.waves:
             draw_text(surface, f"Wave {nxt} is the FINAL wave", (W // 2, 265), 20, settings.UI_ACCENT, True, "center")
         self.buttons.draw(surface)
+        if "intermission" not in self.game.profile.hints_seen:
+            draw_hint(surface, HINTS["intermission"])
         draw_text(surface, "[SPACE] next wave   [S] shop   [E] editor   [ESC] save & main menu", (W // 2, H - 40), 15,
                   settings.UI_TEXT_DIM, anchor="center")
 

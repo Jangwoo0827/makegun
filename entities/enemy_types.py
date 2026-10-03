@@ -9,7 +9,7 @@ import random
 
 import pygame
 
-from entities.boss_types import Titan, Warden
+from entities.boss_types import Architect, Titan, Warden
 from entities.enemy import Boss, Enemy, EnemyActions, EnemyData, WaveScaling
 
 
@@ -288,6 +288,7 @@ ENEMY_CLASSES: dict[str, type[Enemy]] = {
     "summoner": Summoner,
     "titan": Titan,
     "warden": Warden,
+    "architect": Architect,
 }
 
 

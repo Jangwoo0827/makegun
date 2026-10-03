@@ -76,8 +76,8 @@
   "mode": "bossrush",
   "tier": 4,
   "name": "BOSS RUSH",
-  "subtitle": "Four bosses back to back. Beat the clock.",
-  "waves": 4,
+  "subtitle": "Five bosses back to back. Beat the clock.",
+  "waves": 5,
   "hp_mult": 2.5,
   "damage_mult": 1.6,
   "reward_mult": 2.0,
@@ -97,6 +97,9 @@
    ],
    "4": [
     "warden"
+   ],
+   "5": [
+    "architect"
    ]
   },
   "floor": [

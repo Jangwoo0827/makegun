@@ -102,7 +102,7 @@ class HUD:
             br = pygame.Rect(w // 2 - 320, 78, 640, 22)
             draw_bar(surface, br, boss.hp / boss.max_hp, (230, 40, 40), (50, 10, 10))
             phase = getattr(boss, "phase", 1)
-            draw_text(surface, f"{boss.data.name}" + ("  - ENRAGED" if phase == 2 else ""),
+            draw_text(surface, f"{boss.data.name}" + ({2: "  - ENRAGED", 3: "  - OVERCLOCK"}.get(phase, "")),
                       (w // 2, br.centery), 15, (255, 255, 255), True, "center")
 
         # --- Weapon (bottom-right)

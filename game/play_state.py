@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 import settings
-from entities.boss_types import Warden
+from entities.boss_types import Architect, Warden
 from entities.enemy import Enemy, EnemyActions
 from entities.grenade import Grenade
 from entities.pickup import Pickup, PickupKind
@@ -19,6 +19,7 @@ from systems.affixes import affix_death_actions
 from systems.attachments import AttachmentSystem
 from systems.combat import CombatSystem
 from systems.loot_manager import LootManager
+from systems.tutorial import Tutorial
 from systems.spawn_manager import SpawnManager
 from systems.wave_manager import WaveManager, WavePhase
 from ui.fonts import draw_text
@@ -48,6 +49,9 @@ class PlayState(GameState):
         self.spawner = SpawnManager(game.enemy_db, self.world.walls)
         self.waves = WaveManager(self.spawner, session.stage, session.ascension)
         self.grenades: list[Grenade] = []
+        self.tutorial: Tutorial | None = None
+        if not game.profile.tutorial_done and session.stage.mode == "normal":
+            self.tutorial = Tutorial(mobile=game.options.input_mode == "mobile")
         self._pulse: bool = False  # touch: alternates the trigger so semi-auto guns keep firing
         self.stats_timer: float = 0.0
         self.combat = CombatSystem(self.world, game.sound, self.camera.shake)
@@ -111,6 +115,11 @@ class PlayState(GameState):
     # --------------------------------------------------------------- update
     def update(self, dt: float) -> None:
         world, player = self.world, self.session.player
+        if self.tutorial is not None:
+            self.tutorial.update(dt)
+            # hold wave 1 until the basics (move/shoot/dash/grenade) are practiced
+            if self.tutorial.index < 4 and self.waves.phase == WavePhase.COUNTDOWN:
+                self.waves.countdown = max(self.waves.countdown, 1.0)
         if not player.alive:
             self.death_timer += dt
             dt *= 0.3
@@ -139,11 +148,16 @@ class PlayState(GameState):
             mouse_world = self.camera.screen_to_world(pygame.mouse.get_pos())
             trigger = pygame.mouse.get_pressed()[0]
         if player.alive:
+            before = pygame.Vector2(player.pos)
             player.update(dt, move)
+            if self.tutorial is not None:
+                self.tutorial.report("move", (player.pos - before).length())
             player.aim_at(mouse_world)
             weapon = player.weapon
             was_reloading = weapon.reloading
             for shot in weapon.update(dt, trigger):
+                if self.tutorial is not None:
+                    self.tutorial.report("shoot")
                 color = part_color(weapon.part(PartCategory.AMMO), (255, 230, 120))
                 self.combat.fire(player.muzzle_pos(), player.angle, weapon.stats, shot, color, sweep_from=player.pos)
                 player.muzzle_flash = 0.06
@@ -167,6 +181,10 @@ class PlayState(GameState):
         for e in list(world.enemies):
             if isinstance(e, Warden):
                 e.drones_alive = drones
+            elif isinstance(e, Architect):
+                ws = player.weapon.stats
+                e.mimic = (ws.bullet_count, ws.spread, ws.fire_rate)
+                e.mimic_parts = player.weapon.parts
             e.has_los = line_of_sight(e.pos, player.pos, world.inner_walls)
             self._apply_enemy_actions(e, e.update(dt, player.pos))
         for g in self.grenades:
@@ -240,6 +258,8 @@ class PlayState(GameState):
         move = self.game.touch.move if self.game.touch.active else self._keyboard_move()
         if player.try_dash(move):
             self.game.profile.add_stat("total_dashes")
+            if self.tutorial is not None:
+                self.tutorial.report("dash")
             self.world.effects.burst(player.pos, (120, 200, 255), 10, 160, 0.3, 3)
             self.game.sound.play("click")
 
@@ -256,6 +276,8 @@ class PlayState(GameState):
             else:
                 target = self.camera.screen_to_world(pygame.mouse.get_pos())
             self.grenades.append(Grenade(player.pos, target, self.grenade_damage(), settings.GRENADE_RADIUS))
+            if self.tutorial is not None:
+                self.tutorial.report("grenade")
 
     def _explode_grenade(self, g: Grenade) -> None:
         alive_before = {e.uid for e in self.world.enemies if e.alive}
@@ -271,6 +293,14 @@ class PlayState(GameState):
         s.bump("run_parts", len(s.owned_parts))
         s.bump("run_synergies", max(len(w.stats.synergies) for w in s.weapons))
         self.game.profile.max_stat("best_grenade_kills", s.run_stats.get("best_grenade_kills", 0))
+        prof = self.game.profile
+        for pid in s.owned_parts:
+            prof.discover("parts", pid)
+        for w in s.weapons:
+            for name in w.stats.synergies:
+                prof.discover("synergies", name)
+            if w.stats.evolution:
+                prof.discover("evolutions", w.stats.evolution)
         for a in self.game.profile.check_achievements(s.run_stats):
             self.game.toast(f"ACHIEVEMENT: {a.name}", f"{a.description}  (+{a.reward} cores)")
 
@@ -304,6 +334,7 @@ class PlayState(GameState):
         s.kills += 1
         self.waves.register_kill()
         profile = self.game.profile
+        profile.discover("enemies", enemy.enemy_type)
         profile.add_stat("total_kills")
         if enemy.is_boss:
             s.boss_kills += 1
@@ -321,6 +352,12 @@ class PlayState(GameState):
 
     def _on_wave_cleared(self) -> None:
         s = self.session
+        if self.tutorial is not None:
+            self.tutorial.report("clear")
+            if self.tutorial.finished:
+                self.game.profile.tutorial_done = True
+                self.game.profile.save()
+                self.tutorial = None
         for p in self.world.pickups:  # auto-collect leftovers
             self._on_pickup(p, quiet=True)
         self.world.pickups.clear()
@@ -335,6 +372,7 @@ class PlayState(GameState):
             self.game.finish_run(victory=True)
             self.game.push(StateID.STAGE_CLEAR)
             return
+        self.game.profile.save_if_dirty()  # codex discoveries
         reward = self.waves.clear_reward()
         s.earn(reward)
         s.last_wave_reward = reward
@@ -403,6 +441,8 @@ class PlayState(GameState):
                                  "grenade": player.grenade_cooldown / max(0.01, player.grenade_cooldown_max)})
         else:
             self.hud.draw_skills(surface, player)
+        if self.tutorial is not None:
+            self.tutorial.draw(surface)
         if self.game.top is self and not touch.active:
             self.hud.draw_crosshair(surface, pygame.mouse.get_pos(), player.weapon.stats.spread,
                                     player.weapon.charge_ratio if player.weapon.charge > 0 else 0.0)

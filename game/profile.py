@@ -12,6 +12,8 @@ from game.ascension import MAX_ASCENSION
 from systems import storage
 
 PRESET_SLOTS: int = 4
+CODEX_KINDS: tuple[str, ...] = ("parts", "enemies", "synergies", "evolutions")
+HISTORY_SIZE: int = 20
 PROFILE_VERSION: int = 1
 
 
@@ -80,6 +82,13 @@ class Profile:
         self.unlocked_characters: set[str] = {"gunner"}
         self.ascension_unlocked: int = 0   # highest ascension level the player may pick
         self.selected_ascension: int = 0
+        #: codex: things the player has ever found ("parts", "enemies", "synergies", "evolutions")
+        self.discovered: dict[str, set[str]] = {k: set() for k in CODEX_KINDS}
+        #: most recent runs first, at most HISTORY_SIZE entries
+        self.history: list[dict[str, Any]] = []
+        self.tutorial_done: bool = False
+        self.hints_seen: set[str] = set()
+        self._dirty: bool = False
         self.load()
 
     # ------------------------------------------------------------- persistence
@@ -96,6 +105,14 @@ class Profile:
         self.unlocked_characters = set(d.get("unlocked_characters", ["gunner"])) | {"gunner"}
         self.ascension_unlocked = int(d.get("ascension_unlocked", 0))
         self.selected_ascension = min(int(d.get("selected_ascension", 0)), self.ascension_unlocked)
+        raw_disc = d.get("discovered", {})
+        self.discovered = {k: set(raw_disc.get(k, [])) for k in CODEX_KINDS}
+        self.history = list(d.get("history", []))[:HISTORY_SIZE]
+        self.tutorial_done = bool(d.get("tutorial_done", False))
+        self.hints_seen = set(d.get("hints_seen", []))
+        if "tutorial_done" not in d and self.stat("runs") > 0:  # returning players skip the tutorial
+            self.tutorial_done = True
+            self.hints_seen = {"intermission", "editor", "shop", "wave_clear"}
         presets = list(d.get("presets", []))[:PRESET_SLOTS]
         self.presets = presets + [None] * (PRESET_SLOTS - len(presets))
 
@@ -104,7 +121,10 @@ class Profile:
                 "stats": self.stats, "achievements": sorted(self.achievements),
                 "unlocked_stage": self.unlocked_stage, "stage_best": self.stage_best, "presets": self.presets,
                 "unlocked_characters": sorted(self.unlocked_characters),
-                "ascension_unlocked": self.ascension_unlocked, "selected_ascension": self.selected_ascension}
+                "ascension_unlocked": self.ascension_unlocked, "selected_ascension": self.selected_ascension,
+                "discovered": {k: sorted(v) for k, v in self.discovered.items()}, "history": self.history,
+                "tutorial_done": self.tutorial_done, "hints_seen": sorted(self.hints_seen)}
+        self._dirty = False
         storage.write_json(self.path, data)
 
     # ------------------------------------------------------------------- meta
@@ -165,6 +185,29 @@ class Profile:
         return new
 
     # ----------------------------------------------------------------- stages
+    # ------------------------------------------------------------------ codex
+    def discover(self, kind: str, item: str) -> bool:
+        """Mark something as found. Returns True the first time."""
+        bucket = self.discovered.setdefault(kind, set())
+        if item in bucket:
+            return False
+        bucket.add(item)
+        self._dirty = True
+        return True
+
+    def reset_tutorial(self) -> None:
+        self.tutorial_done = False
+        self.hints_seen.clear()
+        self.save()
+
+    def save_if_dirty(self) -> None:
+        if self._dirty:
+            self.save()
+
+    def add_history(self, entry: dict[str, Any]) -> None:
+        self.history.insert(0, entry)
+        del self.history[HISTORY_SIZE:]
+
     def record_run_end(self, stage_index: int, stage_id: str, wave_reached: int, waves_cleared: int,
                        kills: int, bosses: int, victory: bool, stage_count: int, mode: str = "normal",
                        ascension: int = 0, core_bonus: float = 1.0, run_time: float = 0.0) -> int:

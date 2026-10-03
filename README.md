@@ -1,6 +1,6 @@
 # GUN DESIGNER
 
-**v1.2.0** — see [CHANGELOG.md](CHANGELOG.md)
+**v1.3.0** — see [CHANGELOG.md](CHANGELOG.md)
 
 ### ▶ [Play in your browser (PC & mobile)](https://jangwoo0827.github.io/makegun/)
 

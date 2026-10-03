@@ -52,7 +52,7 @@ class StageData:
         return self.index + 1
 
 
-ENDLESS_BOSSES: tuple[str, ...] = ("boss", "titan", "broodmother", "warden")
+ENDLESS_BOSSES: tuple[str, ...] = ("boss", "titan", "broodmother", "warden", "architect")
 
 
 def _color(raw: list[int]) -> Color:

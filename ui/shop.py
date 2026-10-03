@@ -13,6 +13,7 @@ from ui.fonts import draw_text
 from ui.hud import stat_lines
 from ui.menus import draw_backdrop
 from systems.assets import ASSETS
+from systems.tutorial import HINTS, draw_hint
 from weapons.gun_renderer import draw_gun
 
 if TYPE_CHECKING:
@@ -114,6 +115,9 @@ class ShopState(GameState):
             self._notify("New weapon slot unlocked! Customize it in the EDITOR.")
         self._build()
 
+    def on_exit(self) -> None:
+        self.game.profile.hints_seen.add("shop")
+
     def _evolve(self) -> None:
         weapon = self.session.weapons[self.weapon_index]
         if self.session.evolve(weapon):
@@ -179,3 +183,5 @@ class ShopState(GameState):
         draw_text(surface, "Select weapon:", (860, 280), 12, settings.UI_TEXT_DIM)
         if self.message_time > 0:
             draw_text(surface, self.message, (30, H - 40), 18, settings.UI_GOOD, True)
+        if "shop" not in self.game.profile.hints_seen:
+            draw_hint(surface, HINTS["shop"])

@@ -10,6 +10,7 @@ from game.state import GameState, StateID
 from systems.upgrade_manager import Upgrade
 from ui.buttons import Button, ButtonGroup, wrap_text
 from ui.fonts import draw_text
+from systems.tutorial import HINTS, draw_hint
 from ui.menus import dim
 
 if TYPE_CHECKING:
@@ -43,6 +44,9 @@ class WaveClearState(GameState):
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
 
+    def on_exit(self) -> None:
+        self.game.profile.hints_seen.add("wave_clear")
+
     def _pick(self, upgrade: Upgrade) -> None:
         self.session.apply_upgrade(upgrade)
         self.session.pending_upgrades = []
@@ -62,6 +66,8 @@ class WaveClearState(GameState):
         draw_text(surface, f"Reward: ${self.session.last_wave_reward}", (W // 2, 180), 28, settings.MONEY_COLOR,
                   True, "center")
         draw_text(surface, "CHOOSE UPGRADE", (W // 2, 250), 22, settings.UI_TEXT, True, "center")
+        if "wave_clear" not in self.game.profile.hints_seen:
+            draw_hint(surface, HINTS["wave_clear"])
         self.buttons.draw(surface)
         for i, up in enumerate(self.choices):
             rect = self.buttons.buttons[i].rect

@@ -21,6 +21,8 @@ from game.profile import Profile
 _prof = os.path.join(tempfile.gettempdir(), "gun_designer_test_profile.json")
 if os.path.exists(_prof): os.remove(_prof)
 g.profile = Profile(_prof)  # never touch the real profile.json
+g.profile.tutorial_done = True  # the bot plays the main flow; the tutorial has its own test below
+g.profile.hints_seen = {"intermission", "editor", "shop", "wave_clear"}
 DT = 1 / 60
 mouse = {"pos": (640, 360), "down": False}
 keys = set()
@@ -392,7 +394,7 @@ g.start_new_run(stage_id="bossrush"); sess = g.session; ps = g.play_state
 assert g.top.state_id == StateID.INTERMISSION and sess.money >= 1500 and len(sess.owned_parts) >= 18
 key(pygame.K_SPACE); assert g.top.state_id == StateID.GAME and ps.waves.wave == 1
 assert any(e.is_boss for e in ps.world.enemies) or "boss" in ps.spawner.queue
-ps.waves.wave = 3; ps.world.enemies.clear(); ps.spawner.queue.clear()
+ps.waves.wave = rush.waves - 1; ps.world.enemies.clear(); ps.spawner.queue.clear()
 sess.run_time = 123.4
 ps.waves.phase = ps.waves.phase.CLEARED; ps.awaiting_next_wave = True
 ps._start_wave(); ps.world.enemies.clear(); ps.spawner.queue.clear(); ps.waves.phase = ps.waves.phase.ACTIVE
@@ -461,6 +463,60 @@ print("evolution + save ok")
 # new screens render
 for sid in (StateID.PATCH_NOTES, StateID.LOADOUT, StateID.STAGE_SELECT):
     g.push(sid); step(3); g.pop()
+
+# --- v1.3: architect, tutorial, codex + history, stats tabs, mobile text
+assert g.stages[-1].bosses_for(25) == ("architect",) and g.modes["bossrush"].bosses_for(5) == ("architect",)
+g.start_new_run(0); ps = g.play_state; sess = g.session
+arch = ps.spawner.spawn_now("architect", sess.player.pos); ps._add_enemy(arch)
+ps.waves.phase = ps.waves.phase.ACTIVE
+for _ in range(60 * 6):
+    sess.player.hp = sess.player.max_hp; step()
+assert arch.mimic_parts is sess.player.weapon.parts and len(ps.world.enemy_bullets) > 0
+arch.hp = arch.max_hp * 0.2; step(30); assert arch.phase == 3
+arch.take_damage(1e9, True); step(3)
+assert "architect" in g.profile.discovered["enemies"]
+g.end_run()
+print("architect ok")
+
+# tutorial: holds the wave, advances through goals, then marks done
+g.profile.tutorial_done = False; g.profile.hints_seen = set()
+g.start_new_run(0); ps = g.play_state; p = g.session.player
+t = ps.tutorial; assert t is not None and t.step.key == "move"
+step(200); assert ps.waves.phase == ps.waves.phase.COUNTDOWN, "wave held during tutorial"
+keys.clear(); keys.add(pygame.K_d); step(70); keys.clear()
+assert t.step.key == "shoot", t.step
+mouse["down"] = True
+for i in range(180):
+    mouse["down"] = i % 2 == 0; step()
+mouse["down"] = False
+assert t.step.key == "dash", (t.step.key, t.progress, p.weapon.ammo, p.weapon.reloading, p.weapon.stats.fire_mode, g.touch.active, p.alive, g.top)
+key(pygame.K_SPACE); assert t.step.key == "grenade"
+key(pygame.K_q); assert t.step.key == "clear"
+step(200); assert ps.waves.phase != ps.waves.phase.COUNTDOWN, "wave starts after the basics"
+ps.world.enemies.clear(); ps.spawner.queue.clear(); step(5)
+assert g.top.state_id == StateID.WAVE_CLEAR and g.profile.tutorial_done and ps.tutorial is None
+key(pygame.K_1); assert g.top.state_id == StateID.INTERMISSION
+assert "wave_clear" in g.profile.hints_seen
+g.end_run()
+print("tutorial ok")
+
+# codex + history + stats tabs
+assert len(g.profile.history) >= 3 and "victory" in g.profile.history[0]
+assert g.profile.discovered["parts"] and g.profile.discovered["synergies"]
+g.push(StateID.STATS); st = g.top
+for name in ("STATS", "ACHIEVEMENTS", "CODEX", "HISTORY"):
+    click([b for b in g.top.buttons.buttons if b.text == name][0]); step(2)
+    assert g.top.tab == name
+for name in ("ENEMIES", "SYNERGIES", "PARTS"):
+    st._tab("CODEX"); click([b for b in g.top.buttons.buttons if b.text == name][0]); step(2)
+g.pop()
+# mobile text enlarges small fonts only
+from ui import fonts
+g.set_input_mode("mobile"); assert fonts.get_font(12).get_height() > fonts.get_font(12).get_height() - 1
+small_mobile = fonts.get_font(12).size("ABC")[0]
+g.set_input_mode("pc"); small_pc = fonts.get_font(12).size("ABC")[0]
+assert small_mobile > small_pc and fonts.get_font(40).size("A") == fonts.get_font(40).size("A")
+print("codex + history + mobile text ok")
 
 # --- every screen renders
 for sid in (StateID.STAGE_SELECT, StateID.META, StateID.STATS):

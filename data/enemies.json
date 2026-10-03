@@ -321,5 +321,24 @@
   "attack_cooldown": 2.2,
   "projectile_speed": 320,
   "shape": "diamond"
+ },
+ "architect": {
+  "name": "THE ARCHITECT",
+  "behavior": "boss",
+  "hp": 9000,
+  "speed": 75,
+  "damage": 12,
+  "radius": 50,
+  "color": [
+   255,
+   215,
+   90
+  ],
+  "reward": 1500,
+  "armor": 0.15,
+  "attack_range": 480,
+  "attack_cooldown": 4.0,
+  "projectile_speed": 340,
+  "shape": "boss"
  }
 }
