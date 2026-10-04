@@ -31,7 +31,7 @@ def stage_files() -> None:
     os.makedirs(STAGE)
     for f in INCLUDE_FILES:
         shutil.copy2(os.path.join(ROOT, f), STAGE)
-    ignore = shutil.ignore_patterns("__pycache__", "*.pyc", ".gitkeep")
+    ignore = shutil.ignore_patterns("__pycache__", "*.pyc", ".gitkeep", "*.wav")  # pygbag rejects WAV
     for d in INCLUDE_DIRS:
         src = os.path.join(ROOT, d)
         if os.path.isdir(src):
@@ -46,7 +46,9 @@ def main() -> int:
         print("pygbag is not installed. Run:  pip install pygbag")
         return 1
     stage_files()
-    args = [sys.executable, "-m", "pygbag", "--title", "Gun Designer"]
+    # --no_opt: ship assets as-is (pygbag's optimizer renames audio/png only when ffmpeg/pngquant exist,
+    # which made CI and local builds differ)
+    args = [sys.executable, "-m", "pygbag", "--no_opt", "--title", "Gun Designer"]
     if not serve:
         args.append("--build")
     args.append(STAGE)

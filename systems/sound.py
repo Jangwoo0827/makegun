@@ -34,6 +34,17 @@ SYNTH_DEFS: dict[str, tuple[float, float, float, float, float]] = {
 }
 
 
+AUDIO_EXTS: tuple[str, ...] = ("ogg", "wav")  # OGG preferred (required in the browser build)
+
+
+def _audio_file(folder: str, name: str) -> str | None:
+    for ext in AUDIO_EXTS:
+        path = os.path.join(folder, name + "." + ext)
+        if os.path.exists(path):
+            return path
+    return None
+
+
 class SoundManager:
     def __init__(self) -> None:
         self.enabled: bool = True
@@ -49,9 +60,9 @@ class SoundManager:
             self.available = False
             return
         for name, params in SYNTH_DEFS.items():
-            path = os.path.join(settings.SOUND_DIR, f"{name}.wav")
+            path = _audio_file(settings.SOUND_DIR, name)
             try:
-                if os.path.exists(path):
+                if path is not None:
                     self.sounds[name] = pygame.mixer.Sound(path)
                 else:
                     self.sounds[name] = self._synth(*params)
@@ -111,8 +122,8 @@ class MusicManager:
         self.current = track
         if not (self.available and self.enabled):
             return
-        path = os.path.join(MUSIC_DIR, f"{track}.wav")
-        if not os.path.exists(path):
+        path = _audio_file(MUSIC_DIR, track)
+        if path is None:
             return
         try:
             pygame.mixer.music.load(path)

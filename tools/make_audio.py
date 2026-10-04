@@ -2,7 +2,8 @@
 
     python tools/make_audio.py
 
-Writes assets/sounds/<effect>.wav and assets/music/<track>.wav. The game loads these automatically;
+Writes assets/sounds/<effect>.ogg and assets/music/<track>.ogg (OGG Vorbis via ffmpeg - the web build
+rejects WAV; without ffmpeg it falls back to .wav, which still works on desktop). The game loads these automatically;
 re-run after tweaking. Pure standard library (wave + array), deterministic output.
 """
 from __future__ import annotations
@@ -86,6 +87,27 @@ def lowpass(samples: list[float], amount: float) -> list[float]:
     for v in samples:
         y += (v - y) * amount
         out.append(y)
+    return out
+
+
+def write_audio(path_no_ext: str, samples: list[float], gain: float = 1.0) -> str:
+    """Write OGG (via ffmpeg; required by the web build) or fall back to WAV. Returns the file written."""
+    import shutil
+    import subprocess
+    import tempfile
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        write_wav(path_no_ext + ".wav", samples, gain)
+        return path_no_ext + ".wav"
+    tmp = os.path.join(tempfile.gettempdir(), "gd_audio_tmp.wav")
+    write_wav(tmp, samples, gain)
+    out = path_no_ext + ".ogg"
+    subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-i", tmp, "-c:a", "libvorbis", "-q:a", "5", out],
+                   check=True, stdin=subprocess.DEVNULL)
+    os.remove(tmp)
+    stale = path_no_ext + ".wav"
+    if os.path.exists(stale):
+        os.remove(stale)
     return out
 
 
@@ -235,12 +257,11 @@ def main() -> int:
     only = set(sys.argv[1:])
     for name, samples in make_effects().items():
         if not only or name in only:
-            write_wav(os.path.join(SOUND_DIR, f"{name}.wav"), samples)
-            print("sfx  ", name)
+            print("sfx  ", os.path.basename(write_audio(os.path.join(SOUND_DIR, name), samples)))
     if not only or "music" in only:
         for name, samples in make_music().items():
-            write_wav(os.path.join(MUSIC_DIR, f"{name}.wav"), samples, gain=0.8)
-            print("music", name, f"{len(samples) / SR:.1f}s")
+            out = write_audio(os.path.join(MUSIC_DIR, name), samples, gain=0.8)
+            print("music", os.path.basename(out), f"{len(samples) / SR:.1f}s")
     return 0
 
 
