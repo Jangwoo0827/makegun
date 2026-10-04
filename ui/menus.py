@@ -8,7 +8,7 @@ import pygame
 
 import settings
 from game.state import GameState, StateID
-from game.characters import Character, all_characters
+from game.characters import Character, all_characters, get_character
 from ui.buttons import Button, ButtonGroup, draw_panel, wrap_text
 from ui.fonts import draw_text
 from systems.tutorial import HINTS, draw_hint
@@ -18,6 +18,7 @@ from weapons.weapon_builder import STARTER_PRESETS, WeaponBuilder
 
 if TYPE_CHECKING:
     from game.game import Game
+    from game.session import RunSession
 
 W, H = settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT
 
@@ -304,15 +305,35 @@ class SettingsState(MenuState):
 
 
 class PauseState(MenuState):
+    """Pause overlay: current weapon(s), run info and upgrades at a glance."""
     state_id = StateID.PAUSE
     is_overlay = True
+    LEFT = pygame.Rect(30, 84, 430, 560)
+    MID = pygame.Rect(476, 84, 328, 560)
+    RIGHT = pygame.Rect(820, 84, 430, 560)
 
     def __init__(self, game: "Game") -> None:
         super().__init__(game)
+        s = game.session
+        self.slot: int = s.player.current if s is not None else 0
+        self._build()
+
+    def _build(self) -> None:
+        game = self.game
+        self.buttons.clear()
         items = [("RESUME", game.pop), ("SETTINGS", lambda: game.push(StateID.SETTINGS)),
                  ("SAVE & QUIT", game.save_and_quit_to_menu)]
         for i, (label, cb) in enumerate(items):
-            self.buttons.add(Button((W // 2 - 130, 300 + i * 70, 260, 54), label, cb))
+            self.buttons.add(Button((self.MID.x + 24, self.MID.y + 314 + i * 62, self.MID.w - 48, 52), label, cb))
+        s = game.session
+        if s is not None and len(s.weapons) > 1:
+            for i in range(len(s.weapons)):
+                self.buttons.add(Button((self.LEFT.x + 16 + i * 64, self.LEFT.y + 12, 56, 28), f"#{i + 1}",
+                                        lambda i=i: self._slot(i), font_size=13, selected=i == self.slot))
+
+    def _slot(self, i: int) -> None:
+        self.slot = i
+        self._build()
 
     def on_enter(self) -> None:
         pygame.mouse.set_visible(True)
@@ -323,12 +344,105 @@ class PauseState(MenuState):
             return
         super().handle_event(event)
 
+    # ----------------------------------------------------------------- panels
+    def _draw_weapon(self, surface: pygame.Surface, s: "RunSession") -> None:
+        p = self.LEFT
+        draw_panel(surface, p, alpha=235)
+        w = s.weapons[min(self.slot, len(s.weapons) - 1)]
+        top = p.y + (48 if len(s.weapons) > 1 else 14)
+        draw_text(surface, w.name, (p.x + 16, top), 20, settings.UI_TEXT, True)
+        draw_text(surface, f"Lv.{w.level}", (p.right - 16, top + 2), 16, settings.UI_ACCENT, True, "topright")
+        draw_gun(surface, w.parts, (p.centerx - 60, top + 74), 0.0, 2.6)
+        y = top + 128
+        for k, v in stat_lines(w.stats):
+            if k == "EFFECTS":
+                for j, line in enumerate(wrap_text(v, 13, p.w - 32)[:2]):
+                    draw_text(surface, line, (p.x + 16, y + j * 18), 13, (150, 220, 255))
+                y += 40
+                continue
+            draw_text(surface, k, (p.x + 16, y), 14, settings.UI_TEXT_DIM)
+            draw_text(surface, v, (p.right - 16, y), 14, settings.UI_TEXT, True, "topright")
+            y += 22
+        if w.stats.synergies:
+            draw_text(surface, "SYNERGY: " + ", ".join(w.stats.synergies), (p.x + 16, y + 4), 13, (255, 170, 255), True)
+            y += 22
+        if w.stats.evolution:
+            draw_text(surface, f"EVOLVED: {w.stats.evolution}", (p.x + 16, y + 4), 13,
+                      settings.RARITY_COLORS["LEGENDARY"], True)
+
+    def _draw_run(self, surface: pygame.Surface, s: "RunSession") -> None:
+        p = self.MID
+        draw_panel(surface, p, alpha=235)
+        draw_text(surface, "PAUSED", (p.centerx, p.y + 30), 40, settings.UI_ACCENT, True, "center")
+        ps = self.game.play_state
+        wave = ps.waves.wave if ps is not None else s.wave_reached
+        total = f"/{s.stage.waves}" if s.stage.waves else ""
+        rows = [("STAGE", s.stage.name), ("WAVE", f"{wave}{total}"),
+                ("ASCENSION", str(s.ascension.level) if s.ascension.level else "-"),
+                ("CHARACTER", get_character(s.character).name), ("MONEY", f"${s.money}"),
+                ("KILLS", str(s.kills)), ("BOSSES", str(s.boss_kills)),
+                ("TIME", f"{int(s.run_time // 60)}:{s.run_time % 60:04.1f}")]
+        y = p.y + 70
+        for k, v in rows:
+            draw_text(surface, k, (p.x + 20, y), 14, settings.UI_TEXT_DIM)
+            draw_text(surface, v, (p.right - 20, y), 14, settings.UI_TEXT, True, "topright")
+            y += 30
+        draw_text(surface, "Save & Quit keeps your progress;", (p.centerx, p.bottom - 34), 11, settings.UI_TEXT_DIM,
+                  anchor="center")
+        draw_text(surface, "the current wave restarts on CONTINUE.", (p.centerx, p.bottom - 18), 11,
+                  settings.UI_TEXT_DIM, anchor="center")
+
+    def _draw_upgrades(self, surface: pygame.Surface, s: "RunSession") -> None:
+        p = self.RIGHT
+        draw_panel(surface, p, alpha=235)
+        st = s.player.effective_stats
+        draw_text(surface, "PLAYER", (p.x + 16, p.y + 14), 16, settings.UI_ACCENT, True)
+        pstats = [("HP", f"{int(s.player.hp)}/{int(s.player.max_hp)}"), ("MOVE", f"{s.player.move_speed:.0f}"),
+                  ("DMG", f"x{st.damage_multiplier:.2f}"), ("RATE", f"x{st.fire_rate_multiplier:.2f}"),
+                  ("CRIT", f"{st.crit_chance * 100:.0f}% x{st.crit_damage:.1f}"),
+                  ("ARMOR", f"{st.damage_reduction * 100:.0f}%")]
+        for i, (k, v) in enumerate(pstats):
+            col, row = i % 2, i // 2
+            x = p.x + 16 + col * (p.w // 2)
+            y = p.y + 42 + row * 22
+            draw_text(surface, k, (x, y), 13, settings.UI_TEXT_DIM)
+            draw_text(surface, v, (x + p.w // 2 - 36, y), 13, settings.UI_TEXT, True, "topright")
+        counts: dict[str, tuple[object, int]] = {}
+        for u in s.upgrades_taken:
+            up, n = counts.get(u.upgrade_id, (u, 0))
+            counts[u.upgrade_id] = (up, n + 1)
+        y0 = p.y + 120
+        draw_text(surface, f"UPGRADES  ({len(s.upgrades_taken)})", (p.x + 16, y0), 16, settings.UI_ACCENT, True)
+        if not counts:
+            draw_text(surface, "None yet - clear a wave to pick one", (p.x + 16, y0 + 32), 13, settings.UI_TEXT_DIM)
+            return
+        items = sorted(counts.values(), key=lambda t: (-t[0].rarity.tier, t[0].name))  # type: ignore[attr-defined]
+        cols = 1 if len(items) <= 18 else 2
+        col_w = (p.w - 32) // cols
+        per_col = (len(items) + cols - 1) // cols
+        row_h = min(24, (p.bottom - y0 - 40) // max(1, per_col))
+        for i, (up, n) in enumerate(items):
+            col, row = i // per_col, i % per_col
+            x = p.x + 16 + col * col_w
+            y = y0 + 32 + row * row_h
+            color = settings.RARITY_COLORS[up.rarity.value]  # type: ignore[attr-defined]
+            pygame.draw.rect(surface, color, (x, y + 4, 4, row_h - 8))
+            label = up.name + (f" x{n}" if n > 1 else "")  # type: ignore[attr-defined]
+            draw_text(surface, label, (x + 10, y), 13, settings.UI_TEXT, True)
+            if cols == 1:
+                draw_text(surface, up.description, (p.right - 16, y + 1), 12, settings.UI_TEXT_DIM,  # type: ignore[attr-defined]
+                          anchor="topright")
+
     def draw(self, surface: pygame.Surface) -> None:
-        dim(surface)
-        draw_text(surface, "PAUSED", (W // 2, 210), 56, settings.UI_ACCENT, True, "center")
+        dim(surface, 180)
+        s = self.game.session
+        if s is None:
+            draw_text(surface, "PAUSED", (W // 2, 210), 56, settings.UI_ACCENT, True, "center")
+        else:
+            self._draw_weapon(surface, s)
+            self._draw_run(surface, s)
+            self._draw_upgrades(surface, s)
         self.buttons.draw(surface)
-        draw_text(surface, "Save & Quit keeps your money, parts and upgrades. The current wave restarts on CONTINUE.",
-                  (W // 2, 530), 15, settings.UI_TEXT_DIM, anchor="center")
 
 
 class IntermissionState(MenuState):
