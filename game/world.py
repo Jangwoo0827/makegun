@@ -35,6 +35,10 @@ def build_arena_walls(obstacles: tuple[tuple[int, int, int, int], ...] = DEFAULT
     return walls
 
 
+FLOOR_TILE_SIZE: int = 160  # tiles/<stage>_floor.png is drawn at this size (seamless, 2x2 grid cells)
+WALL_TILE_SIZE: int = 80
+
+
 class World:
     def __init__(self, player: Player, stage: StageData | None = None) -> None:
         self.player: Player = player
@@ -62,13 +66,21 @@ class World:
                 return e
         return None
 
+    def _tile(self, kind: str, size: int) -> pygame.Surface | None:
+        """tiles/<stage_id>_<kind>.png, else the shared tiles/<kind>.png, else None (flat colors)."""
+        if self.stage is not None:
+            img = ASSETS.get("tiles", f"{self.stage.stage_id}_{kind}", (size, size))
+            if img is not None:
+                return img
+        return ASSETS.get("tiles", kind, (size, size))
+
     def _render_floor(self) -> pygame.Surface:
         surf = pygame.Surface((settings.ARENA_WIDTH, settings.ARENA_HEIGHT))
         g = settings.GRID_SIZE
-        floor_tile = ASSETS.get("tiles", "floor", (g, g))
+        floor_tile = self._tile("floor", FLOOR_TILE_SIZE)
         if floor_tile is not None:
-            for x in range(0, settings.ARENA_WIDTH, g):
-                for y in range(0, settings.ARENA_HEIGHT, g):
+            for x in range(0, settings.ARENA_WIDTH, FLOOR_TILE_SIZE):
+                for y in range(0, settings.ARENA_HEIGHT, FLOOR_TILE_SIZE):
                     surf.blit(floor_tile, (x, y))
         else:
             surf.fill(self.stage.floor if self.stage else settings.BG_COLOR)
@@ -77,7 +89,7 @@ class World:
                 pygame.draw.line(surf, grid, (x, 0), (x, settings.ARENA_HEIGHT))
             for y in range(0, settings.ARENA_HEIGHT, g):
                 pygame.draw.line(surf, grid, (0, y), (settings.ARENA_WIDTH, y))
-        wall_tile = ASSETS.get("tiles", "wall", (settings.WALL_THICKNESS, settings.WALL_THICKNESS))
+        wall_tile = self._tile("wall", WALL_TILE_SIZE)
         for wall in self.walls:
             if wall_tile is not None:
                 surf.set_clip(wall)

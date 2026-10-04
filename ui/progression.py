@@ -86,7 +86,18 @@ class StageSelectState(MenuState):
         for i, stage in enumerate(self.game.stages):
             rect = self.buttons.buttons[i].rect
             unlocked = i <= profile.unlocked_stage
-            pygame.draw.rect(surface, stage.floor, (rect.x + 5, rect.y + 5, rect.w - 10, 50), border_radius=6)
+            header = pygame.Rect(rect.x + 5, rect.y + 5, rect.w - 10, 50)
+            pygame.draw.rect(surface, stage.floor, header, border_radius=6)
+            tile = ASSETS.get("tiles", f"{stage.stage_id}_floor", (160, 160))
+            if tile is not None and unlocked:  # preview the stage's floor
+                clip = surface.get_clip()
+                surface.set_clip(header)
+                for tx in range(header.x, header.right, 160):
+                    surface.blit(tile, (tx, header.y - 50))
+                surface.set_clip(clip)
+                shade = pygame.Surface(header.size, pygame.SRCALPHA)
+                shade.fill((0, 0, 0, 90))
+                surface.blit(shade, header.topleft)
             draw_text(surface, f"STAGE {stage.number}", (rect.centerx, rect.y + 18), 12, settings.UI_TEXT_DIM,
                       True, "center")
             draw_text(surface, stage.name, (rect.centerx, rect.y + 38), 20,
